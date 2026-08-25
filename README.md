@@ -13,17 +13,26 @@ page to your browser; nothing is deployed and no data leaves your laptop.
 Python 3.8 or newer is the only requirement. There are no packages to install and no build step.
 
 ```bash
-git clone <this repo>
+git clone git@github.com:dgorshkov/paid-canvas.git
 cd paid-canvas
 ./run setup     # asks for your Atlassian email and API token, once
 ./run           # starts the server and opens the browser
 ```
 
-`./run setup` wants an API token from
-[id.atlassian.com/manage-profile/security/api-tokens](https://id.atlassian.com/manage-profile/security/api-tokens).
-Create one, paste it in with your Atlassian email, and it checks both against Jira before
-writing `config.json` next to `server.py` with owner-only permissions. That file is git-ignored
-and never leaves your machine.
+### Getting a Jira API token
+
+1. Open **<https://id.atlassian.com/manage-profile/security/api-tokens>** while signed in to
+   your Atlassian account.
+2. Click **Create API token**. If the page offers a scoped token as well, take the plain one —
+   this tool signs in with your email and the token, and the plain token covers it.
+3. Name it something you will recognise later, `paid-canvas` for instance, and pick an expiry.
+4. Copy the token. Atlassian shows it once and never again; if you lose it, delete that token
+   and make another.
+5. Run `./run setup` and paste your Atlassian email and the token when it asks.
+
+The token is your Jira account, so treat it like a password. `./run setup` checks it against
+Jira, then writes it to `config.json` next to `server.py` with owner-only permissions. That
+file is git-ignored and never leaves your machine. Revoke a token any time on the same page.
 
 Already using the Atlassian CLI? Skip setup. The server reads `acli`'s token from the macOS
 keychain and its email from `~/.config/acli/jira_config.yaml`.

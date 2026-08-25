@@ -8,10 +8,13 @@ A local, zoomable board for Jira project PAID. `server.py` reads Jira and serves
 1. Check Python: `python3 --version` (3.8 or newer).
 2. Run `./run check`. If it prints an account name and a board name, credentials already work
    — the user has the Atlassian CLI signed in — and you can skip to step 4.
-3. Otherwise run `./run setup`. It is interactive: it asks for an Atlassian email and an API
-   token from https://id.atlassian.com/manage-profile/security/api-tokens, verifies them
-   against Jira, and writes `config.json` (git-ignored, mode 0600). Ask the user to create the
-   token and paste it themselves; never put a token in a command line or a file you write.
+3. Otherwise run `./run setup`. It is interactive. Point the user at
+   https://id.atlassian.com/manage-profile/security/api-tokens, where they click **Create API
+   token** (the plain one, not the scoped one), name it, pick an expiry and copy it — Atlassian
+   shows it once. `./run setup` then asks for their Atlassian email and that token, verifies
+   both against Jira, and writes `config.json` (git-ignored, mode 0600). Have the user paste
+   the token into the prompt themselves; never put a token in a command line or in a file you
+   write, and never echo it back.
 4. `./run` starts the server on 127.0.0.1:8777 and opens the browser.
 `team.json` ships with the repo and lists the squad; there is nothing to configure there.
 

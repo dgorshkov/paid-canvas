@@ -194,8 +194,11 @@ def jira_token():
 def setup():
     """Ask once, store in config.json, and check the answer against Jira."""
     print("PAID canvas setup\n")
-    print("Create an API token at "
-          "https://id.atlassian.com/manage-profile/security/api-tokens\n")
+    print("You need an Atlassian API token:\n")
+    print("  1. open https://id.atlassian.com/manage-profile/security/api-tokens")
+    print("  2. Create API token, take the plain one if offered a choice")
+    print("  3. name it (paid-canvas) and pick an expiry")
+    print("  4. copy it now, Atlassian shows it once\n")
     email = input("Atlassian email: ").strip()
     token = input("API token: ").strip()
     if not email or not token:
