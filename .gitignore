@@ -1,0 +1,6 @@
+.server.log
+.dev-status.json
+.type-icons.json
+config.json
+team.json
+.DS_Store

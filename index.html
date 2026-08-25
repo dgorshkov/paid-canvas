@@ -1,0 +1,1402 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PAID Canvas</title>
+<style>
+:root{
+  --bg:#0e1116; --panel:#141920; --panel2:#1b222c;
+  --line:#242c38; --line2:#313c4b;
+  --tx:#e6edf3; --tx2:#9aa7b6; --tx3:#6b7887;
+  --p-highest:#f85149; --accent:#58a6ff; --focus:#e3a008;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--tx);
+  font-family:ui-sans-serif,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+
+/* ---------- top bar ---------- */
+#top{position:fixed;inset:0 0 auto 0;height:46px;z-index:44;display:flex;align-items:center;
+  gap:8px;padding:0 12px;background:rgba(14,17,22,.92);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);overflow:hidden}
+.brand{font-weight:700;font-size:13px;white-space:nowrap;flex:0 1 auto;overflow:hidden;
+  text-overflow:ellipsis;min-width:0}
+.brand small{color:var(--tx3);font-weight:500}
+.ctl{display:flex;align-items:center;gap:6px;flex:none}
+.btn{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:5px 9px;
+  font-size:12px;cursor:pointer;white-space:nowrap;line-height:1}
+.btn:hover{border-color:#3f4c5e;background:#212a36}
+.btn.icon{padding:5px 9px;font-variant-numeric:tabular-nums;min-width:28px}
+.btn.on{background:#1f6feb33;border-color:#1f6feb;color:#cde3ff}
+#clearFocus{background:#e3a00826;border-color:var(--focus);color:#ffd77a;display:none;
+  max-width:300px;overflow:hidden;text-overflow:ellipsis}
+#clearFocus.show{display:block}
+#clearFocus:hover{background:#e3a00840;border-color:var(--focus)}
+#q{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:5px 9px;
+  font-size:12px;width:190px;outline:none}
+#q:focus{border-color:var(--accent)}
+#qn{font-size:11px;color:var(--tx3);min-width:56px;font-variant-numeric:tabular-nums}
+.spacer{flex:1 1 auto}
+#status{font-size:11px;color:var(--tx3);white-space:nowrap;flex:0 1 auto;min-width:0;
+  overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- quick filter bar ---------- */
+#qf{position:fixed;top:46px;left:0;right:0;z-index:43;
+  background:rgba(18,22,29,.94);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);padding:5px 10px 6px}
+.qrow{display:flex;align-items:center;gap:5px;height:32px;overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none}
+.qrow::-webkit-scrollbar{display:none}
+.qlab{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);
+  flex:none;width:48px}
+.qp{flex:none;width:26px;height:26px;border-radius:50%;border:2px solid transparent;
+  display:grid;place-items:center;font-size:10px;font-weight:800;color:#0b0f14;cursor:pointer;
+  padding:0;background:#2b3542}
+.qp:hover{border-color:var(--tx2)}
+.qp.on{border-color:var(--focus);box-shadow:0 0 0 2px #e3a00855}
+.qe{flex:none;display:inline-flex;align-items:center;gap:6px;max-width:260px;
+  background:var(--panel2);border:1px solid var(--line2);border-radius:14px;padding:4px 10px;
+  font-size:11px;cursor:pointer;line-height:1.3}
+.qe:hover{border-color:#4b5a6e}
+.qe.on{border-color:var(--focus);background:#e3a00822;color:#ffd77a}
+.qe .ek{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:10px;font-weight:700;
+  color:var(--tx3);flex:none}
+.qe.on .ek{color:#ffd77a}
+.qe .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qe .c{color:var(--tx3);font-variant-numeric:tabular-nums;flex:none}
+.qe.on .c{color:var(--focus)}
+.qe i{width:7px;height:7px;border-radius:50%;background:#a371f7;flex:none}
+
+/* ---------- canvas ---------- */
+#stage{position:fixed;inset:0;overflow:hidden;
+  background-color:var(--bg);
+  background-image:radial-gradient(circle at 1px 1px,#1d232d 1px,transparent 0);
+  background-size:30px 30px}
+#stage.grab{cursor:grabbing}
+#world{position:absolute;top:0;left:0;transform-origin:0 0}
+#world.moving{will-change:transform}
+
+/* column bands and swimlanes */
+.colband{position:absolute;top:0;background:#12171e;border:3px solid var(--line2);
+  border-radius:28px}
+.grpline{position:absolute;top:0;width:10px;border-radius:5px;background:var(--line2);
+  opacity:.85;margin-left:-5px}
+.swim{position:absolute;left:0;border-top:5px solid var(--line2);pointer-events:none}
+.swim.alt{background:#ffffff08}
+.swimHd{position:absolute;left:34px;top:0;height:136px;display:flex;align-items:center;gap:22px;
+  line-height:1;white-space:nowrap}
+.swimHd .sd{border-radius:50%;flex:none}
+.swimHd .sl{font-weight:750;letter-spacing:-.02em}
+.swimHd .sc{color:var(--tx3);font-variant-numeric:tabular-nums}
+
+/* ---------- card ---------- */
+.card{position:absolute;background:var(--panel);border:2px solid var(--line);border-radius:18px;
+  overflow:hidden;cursor:pointer;border-color:var(--ac,var(--line))}
+.card:hover{border-color:var(--ah,#4b5a6e)}
+.card.sel{border-color:var(--accent);box-shadow:0 0 0 8px #58a6ff2b}
+.card.dim{opacity:.12}
+.card.hit{border-color:var(--focus);box-shadow:0 0 0 6px #e3a00826}
+.card .body{position:absolute;inset:0;padding:24px;position:absolute}
+/* a card that has sat in one status for months gathers dust, then a web. Both sit behind
+   the text so nothing it says gets harder to read. */
+.card .dust{position:absolute;inset:-25%;pointer-events:none;opacity:0;
+  background-repeat:repeat;background-size:118px 118px;
+  background-image:
+    radial-gradient(1.6px 1.6px at 11% 19%, #d6cbb4aa, transparent 62%),
+    radial-gradient(1.2px 1.2px at 34% 8%,  #d6cbb499, transparent 62%),
+    radial-gradient(2.1px 2.1px at 57% 27%, #d6cbb48c, transparent 62%),
+    radial-gradient(1.1px 1.1px at 79% 13%, #d6cbb4aa, transparent 62%),
+    radial-gradient(1.7px 1.7px at 92% 38%, #d6cbb48c, transparent 62%),
+    radial-gradient(1.3px 1.3px at 18% 46%, #d6cbb4a0, transparent 62%),
+    radial-gradient(2.3px 2.3px at 44% 58%, #d6cbb480, transparent 62%),
+    radial-gradient(1.1px 1.1px at 68% 49%, #d6cbb4aa, transparent 62%),
+    radial-gradient(1.5px 1.5px at 87% 66%, #d6cbb48c, transparent 62%),
+    radial-gradient(1.9px 1.9px at 7% 74%,  #d6cbb480, transparent 62%),
+    radial-gradient(1.2px 1.2px at 29% 88%, #d6cbb4a0, transparent 62%),
+    radial-gradient(1.6px 1.6px at 53% 79%, #d6cbb48c, transparent 62%),
+    radial-gradient(1.1px 1.1px at 74% 94%, #d6cbb4aa, transparent 62%),
+    radial-gradient(2.0px 2.0px at 96% 84%, #d6cbb47a, transparent 62%)}
+.card .web{position:absolute;pointer-events:none;opacity:0;overflow:visible}
+.card .web path,.card .web line{fill:none;stroke:#cfd8e3;vector-effect:non-scaling-stroke}
+.card .big{position:absolute;left:24px;right:24px;display:none;align-items:flex-start;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:124px;font-weight:700;
+  letter-spacing:-.04em;line-height:1;color:#c9d5e2;white-space:nowrap;pointer-events:none}
+.krow{display:flex;align-items:center;gap:12px;height:48px}
+.tico{flex:none;display:block}
+#side .spills{align-items:center}
+.k{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:34px;font-weight:700;
+  letter-spacing:-.02em;line-height:1;white-space:nowrap;flex:none;color:var(--tx2)}
+.krow .sp{flex:1}
+.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:21px;
+  font-weight:800;color:#0b0f14;flex:none}
+.sum{font-size:40px;line-height:50px;margin-top:16px;font-weight:500;letter-spacing:-.01em}
+.pills{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+.pill{font-size:24px;font-weight:700;padding:7px 14px;border-radius:9px;line-height:1;
+  white-space:nowrap;letter-spacing:.04em}
+.meta{margin-top:14px;display:flex;gap:18px;font-size:26px;color:var(--tx3);align-items:center;
+  flex-wrap:wrap;line-height:1.2}
+.meta .ep{color:#a371f7;max-width:440px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta .age{font-weight:700;color:var(--tx2)}
+.mrpips{display:inline-flex;align-items:center;gap:7px;font-size:24px;font-weight:700;
+  color:var(--tx2)}
+.mrpips i{width:15px;height:15px;border-radius:5px;display:inline-block}
+.chd{margin-top:22px;font-size:26px;color:var(--tx3);border-top:2px solid var(--line);
+  padding-top:14px;line-height:1}
+
+/* ---------- linked chip ---------- */
+.kid{position:absolute;border-radius:12px;border:2px solid var(--line2);background:var(--panel2);
+  overflow:hidden;padding:12px 14px}
+.kid.rel{border-style:dashed}
+.kid .kk{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:28px;font-weight:700;
+  line-height:1;display:flex;align-items:center;gap:10px;height:34px;color:var(--tx2)}
+.kid .kk .sp{flex:1}
+.kid .kk .av{width:34px;height:34px;font-size:17px}
+.kid .ks{font-size:28px;line-height:34px;margin-top:10px;color:var(--tx);font-weight:500}
+.kid .kp{margin-top:12px;display:flex;align-items:center;gap:10px}
+.kid .mrs{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+.kid .mr{display:flex;align-items:center;gap:10px;font-size:23px;line-height:28px;
+  color:var(--tx2);white-space:nowrap}
+.kid .mr b{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;flex:none}
+.kid .mr .t{overflow:hidden;text-overflow:ellipsis;color:var(--tx3)}
+.kid .mr i{width:13px;height:13px;border-radius:4px;flex:none}
+.kid.dim{opacity:.12}
+.kid.hit{border-color:var(--focus);border-style:solid}
+
+/* ---------- level of detail: 0 the key alone, 1 everything ---------- */
+#world.lod0 .swimHd .sl{font-size:96px}
+#world.lod0 .swimHd .sd{width:40px;height:40px}
+#world.lod0 .swimHd .sc{font-size:72px}
+#world.lod0 .sum,#world.lod0 .pills,#world.lod0 .meta,#world.lod0 .chd{display:none}
+#world.lod0 .krow .k,#world.lod0 .krow .mrpips{display:none}
+#world.lod0 .krow{height:48px}
+#world.lod0 .krow .av{width:88px;height:88px;font-size:42px}
+#world.lod0 .card .big{display:flex}
+#world.lod0 .kid{padding:0;border-width:0;border-radius:8px}
+#world.lod0 .kid .kk,#world.lod0 .kid .ks,#world.lod0 .kid .mrs{display:none}
+#world.lod0 .kid .kp{margin:0;height:100%}
+#world.lod0 .kid .kp .pill{width:100%;height:100%;border-radius:8px;color:transparent}
+
+#world.lod1 .swimHd .sl{font-size:54px}
+#world.lod1 .swimHd .sd{width:24px;height:24px}
+#world.lod1 .swimHd .sc{font-size:40px}
+
+/* ---------- sticky rails ---------- */
+#railTop{position:fixed;left:0;right:0;height:36px;z-index:36;pointer-events:none;
+  overflow:hidden;background:rgba(14,17,22,.82);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line)}
+#railTop .rc{position:absolute;top:0;height:36px;display:flex;align-items:center;gap:7px;
+  padding:0 9px;font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;
+  border-left:1px solid var(--line2);background:rgba(20,26,34,.5)}
+#railTop .rc.tight{font-size:11px;padding:0 6px;gap:5px}
+#railTop .rc.tight .w{display:none}
+#railTop .rc.narrow .c{display:none}
+#railTop .rc .n{overflow:hidden;text-overflow:ellipsis;min-width:0}
+#railTop .rc .c{color:var(--tx3);font-weight:600;font-variant-numeric:tabular-nums}
+#railTop .rc .w{color:var(--tx3);font-weight:600;font-size:11px}
+#railTop .rc .w.over{color:var(--p-highest)}
+#railLeft{position:fixed;left:0;bottom:0;width:0;z-index:35;pointer-events:none}
+#railLeft .rs{position:absolute;left:10px;top:0;display:none;align-items:center;gap:7px;
+  background:#0b0e13e6;border:1px solid var(--line2);border-radius:7px;padding:4px 10px;
+  font-size:11px;font-weight:700;white-space:nowrap;backdrop-filter:blur(8px)}
+#railLeft .rs.show{display:flex}
+#railLeft .rs i{width:7px;height:7px;border-radius:50%;flex:none}
+#railLeft .rs b{color:var(--tx3);font-weight:600}
+
+/* ---------- detail panel ---------- */
+#side{position:fixed;top:82px;right:0;bottom:0;width:400px;z-index:42;background:var(--panel);
+  border-left:1px solid var(--line);transform:translateX(102%);transition:transform .16s ease;
+  display:flex;flex-direction:column}
+#side.open{transform:none}
+#side header{padding:14px 30px 12px 14px;border-bottom:1px solid var(--line)}
+#side .sk{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:12px;font-weight:700;
+  color:var(--tx3)}
+#side .ss{font-size:15px;line-height:1.4;margin-top:6px;font-weight:600}
+#side .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--tx2)}
+#side .row b{color:var(--tx);font-weight:600}
+#side .spills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+#side .spills .pill{font-size:10px;padding:3px 8px;border-radius:6px;letter-spacing:.04em}
+#side .list{overflow:auto;padding:6px 14px 24px;flex:1}
+#side .lh{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);
+  margin:14px 0 8px}
+#side a{color:var(--accent);text-decoration:none}
+#side a:hover{text-decoration:underline}
+.li{display:block;padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;
+  text-decoration:none;color:inherit}
+.li:hover{border-color:var(--line2);background:var(--panel2)}
+.li .l1{display:flex;align-items:center;gap:7px;font-size:11px;
+  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700}
+.li .l1 .sd{width:8px;height:8px;border-radius:50%;flex:none}
+.li .l1 .rl{margin-left:auto;font-family:inherit;font-weight:500;color:var(--tx3);font-size:10px}
+.li .l2{font-size:12px;color:var(--tx);margin-top:4px;line-height:1.35;font-weight:500}
+.li .l3{font-size:10px;color:var(--tx3);margin-top:5px;display:flex;gap:9px;flex-wrap:wrap}
+.pp{display:flex;flex-wrap:wrap;gap:6px}
+.pp span{font-size:10px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;
+  padding:3px 7px;color:var(--tx2);cursor:pointer}
+.pp span:hover{border-color:var(--focus)}
+.pp span b{color:var(--tx);font-weight:600}
+.tl{display:flex;flex-direction:column;gap:2px}
+.sp2{display:flex;align-items:baseline;gap:8px;font-size:11px;padding:4px 8px;
+  border-left:2px solid var(--line2);color:var(--tx2)}
+.sp2 .d{font-variant-numeric:tabular-nums;color:var(--tx);font-weight:700;min-width:38px;
+  text-align:right}
+.sp2 .n{flex:1}
+.sp2 .w{color:var(--tx3);font-size:10px}
+#sideX{position:absolute;top:9px;right:11px;cursor:pointer;color:var(--tx3);font-size:18px;
+  line-height:1}
+#sideX:hover{color:var(--tx)}
+
+/* ---------- floating controls ---------- */
+#zoombar{position:fixed;left:12px;bottom:12px;z-index:37;display:flex;align-items:center;gap:6px;
+  background:#0b0e13d9;border:1px solid var(--line);border-radius:8px;padding:6px;
+  backdrop-filter:blur(8px)}
+#zoomlbl{font-size:11px;color:var(--tx2);width:40px;text-align:center;
+  font-variant-numeric:tabular-nums}
+#mini{position:fixed;right:12px;bottom:12px;z-index:37;border:1px solid var(--line2);
+  border-radius:8px;background:#0b0e13d9;backdrop-filter:blur(8px);cursor:crosshair}
+#mini.shift{right:412px}
+#boot{position:fixed;inset:82px 0 0 0;z-index:50;background:var(--bg);display:grid;
+  place-items:center;text-align:center;font-size:13px;color:var(--tx2);line-height:1.8}
+#boot.gone{display:none}
+#load{position:fixed;top:0;left:0;right:0;height:3px;z-index:60;pointer-events:none;
+  background:transparent}
+#load i{display:block;height:100%;width:0;opacity:0;transition:width .3s ease,opacity .3s ease;
+  background:linear-gradient(90deg,#58a6ff,#a371f7,#39c5cf)}
+#load.on i{opacity:1}
+
+/* ---------- skeleton ---------- */
+@keyframes shimmer{from{transform:translateX(-130%)}to{transform:translateX(230%)}}
+.card.ghost{border-color:var(--line);background:#12171f}
+.card.ghost .sh{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(100deg,transparent 24%,#ffffff10 44%,#ffffff1c 50%,
+    #ffffff10 56%,transparent 76%);
+  animation:shimmer 1.6s linear infinite}
+.ghost .k{color:#2f3947}
+.gline{display:block;height:26px;border-radius:6px;background:#222b36}
+.gline.s{height:20px;background:#1e262f}
+.gpill{display:block;height:38px;width:120px;border-radius:9px;background:#222b36}
+.gav{width:44px;height:44px;border-radius:50%;background:#222b36;flex:none}
+.gico{width:40px;height:40px;border-radius:8px;background:#222b36;flex:none}
+.kid.ghost{border-color:var(--line);background:#161d26}
+.kid.ghost .gline{height:22px}
+.kid.ghost .gpill{height:30px;width:96px}
+#boot code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:12px}
+</style>
+</head>
+<body>
+
+<div id="top">
+  <span class="brand">PAID canvas <small id="bname"></small></span>
+  <div class="ctl">
+    <input id="q" placeholder="Search key, summary, person" spellcheck="false">
+    <span id="qn"></span>
+    <button class="btn" id="clearFocus"></button>
+  </div>
+  <span class="spacer"></span>
+  <span id="status"></span>
+  <div class="ctl"><button class="btn" id="reload" title="Re-fetch from Jira">Refresh</button></div>
+</div>
+
+<div id="qf">
+  <div class="qrow" id="qfPeople"><span class="qlab">People</span></div>
+  <div class="qrow" id="qfEpics"><span class="qlab">Epics</span></div>
+</div>
+
+<div id="stage"><div id="world"></div></div>
+<div id="railTop"></div>
+<div id="railLeft"></div>
+
+<aside id="side">
+  <span id="sideX">&times;</span>
+  <header>
+    <div class="sk" id="sk"></div>
+    <div class="ss" id="ss"></div>
+    <div class="spills" id="spills"></div>
+    <div class="row" id="srow"></div>
+  </header>
+  <div class="list" id="slist"></div>
+</aside>
+
+<div id="zoombar">
+  <button class="btn icon" id="zo">&minus;</button>
+  <span id="zoomlbl">0%</span>
+  <button class="btn icon" id="zi">+</button>
+  <button class="btn" id="fit">Fit</button>
+  <button class="btn" id="hundred">100%</button>
+</div>
+
+<canvas id="mini" width="230" height="150"></canvas>
+
+<div id="load"><i id="loadBar"></i></div>
+<div id="boot" class="gone"></div>
+
+<script>
+"use strict";
+
+/* ===================== world geometry (constant, in world px) ===================== */
+const CARD_W = 700, LANE_PAD = 40, SUB_GAP = 34, COL_GAP = 170, CARD_GAP = 30;
+const GROUP_GAP = 560;                              // between the three bands of columns
+const SWIM_HEAD = 136, SWIM_GAP = 60, SWIM_MIN = 190;
+const RAIL_H = 36;                                  // screen px, column-name rail
+const MAX_SUBCOLS = 3;                              // how wide one board column may grow
+
+// card interior
+const PAD = 24, KEY_ROW = 48, SUM_LH = 50, SUM_CPL = 32;
+const PILL_ROW = 44, META_ROW = 32, CHD_ROW = 42;
+
+// linked chip: full card width, stacked, height follows its own title and merge requests
+const CHIP_W = CARD_W - PAD * 2, CHIP_GAP = 16, CHIP_PAD = 12;
+const CHIP_KEY = 34, CHIP_LH = 34, CHIP_CPL = 47, CHIP_PILL = 34, CHIP_MR = 34, MR_MAX = 3;
+const CHIP_MIN = 66;                                // compact chip: one row, key and status
+
+// Two states, one boundary at 60% of reading size: the key alone, or everything the card has.
+// The geometry always reserves room for everything, so crossing this never moves a box.
+const LOD = [0.252];
+const SREAD = 0.42;                                 // world scale where a card reads naturally
+
+const CATC = {new:'#7d8da3', indeterminate:'#e3a008', done:'#3fb950'};
+const PRIOC = {Highest:'#f85149', High:'#f0883e', Medium:'#58a6ff', Low:'#6b7887',
+               Lowest:'#4b5563', None:'#3d4652'};
+const TYPEC = {'User story':'#3fb950','Employee story':'#a371f7','Bug':'#f85149',
+               'Spike':'#39c5cf','Task':'#58a6ff','Epic':'#a371f7'};
+const TYPEAB = {'User story':'STORY','Employee story':'INTERNAL','Bug':'BUG','Spike':'SPIKE',
+                'Task':'TASK'};
+// One colour per person, never repeated: hues walk the wheel by the golden angle so
+// neighbouring indices land far apart, and saturation and lightness cycle to widen the gap.
+let AV_INDEX = null;
+const ROLE = {a:'assignee', r:'reporter', x:'created it', c:'commented', k:'linked work'};
+// Filing a ticket is not working on it, so reporter and creator do not match the person
+// filter. The detail panel still lists every role.
+const FILTER_ROLES = 'ack';
+const MRC = {opened:'#39c5cf', draft:'#6b7887', merged:'#a371f7', closed:'#f85149',
+             locked:'#f0883e', other:'#4b5a6e'};
+const MR_ORDER = ['opened','draft','merged','closed','other'];
+// The projects that carry the actual implementation. Everything else a story links to —
+// support tickets, other PAID items, design, ideas — stays in the detail panel only.
+const CHIP_PROJECTS = new Set(['ANDR','IOS','DEV','BACK','LOC']);
+const DELIVERED_DAYS = 30;                  // how far back the Delivered column reaches
+const SHORT = {'NEW':'NEW', 'UNCLEAR':'UNCL', 'Ready':'READY', 'Implementation':'IMPL',
+               'Code Review':'CR', 'Testing':'TEST', 'QA Review':'QA', 'Merging':'MERGE',
+               'REGRESSION':'REGR', 'Deployment':'DEPL', 'Delivered':'DELIV'};
+const shortName = n => SHORT[n] || n.split(/[\s-]/)[0].slice(0,5).toUpperCase();
+
+/* ===================== state ===================== */
+let DATA = null, CARDS = [], COLS = [], SWIMS = [];
+let WORLD = {w:1000, h:1000};
+let view = {x:0, y:0, s:0.2};
+let sel = null, hits = null, hitIdx = -1;
+
+/** One quick filter at a time: {kind:'person'|'epic', id} or null. */
+const F = {focus:null, q:''};
+
+const $ = s => document.querySelector(s);
+const world = $('#world'), stage = $('#stage');
+const railTop = $('#railTop'), railLeft = $('#railLeft');
+const esc = s => String(s==null?'':s).replace(/[&<>"]/g,
+  c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function avColor(id, alpha){
+  if (!AV_INDEX){
+    AV_INDEX = new Map();
+    [...DATA.people]
+      .sort((a,b) => (b.team ? 1 : 0) - (a.team ? 1 : 0) || a.name.localeCompare(b.name))
+      .forEach((p, n) => AV_INDEX.set(p.id, n));
+  }
+  const n = AV_INDEX.get(id);
+  if (n == null) return alpha ? 'hsl(215 12% 36% / ' + alpha + ')' : '#4b5a6e';
+  return 'hsl(' + ((n * 137.508) % 360).toFixed(1) + ' '
+    + (72 + (n % 2) * 14) + '% ' + (62 + (n % 3) * 6) + '%'
+    + (alpha ? ' / ' + alpha : '') + ')';
+}
+function personName(id){ return (DATA.people.find(p => p.id === id) || {}).name || id; }
+function epicName(key){ return DATA.epics[key] ? DATA.epics[key].summary : key; }
+function lines(text, cpl){ return Math.max(1, Math.ceil((text || '').length / cpl)); }
+function typeIcon(name, px){
+  const src = DATA.typeIcons && DATA.typeIcons[name];
+  if (!src) return '';
+  return '<img class="tico" src="'+src+'" alt="" title="'+esc(name)+'" style="width:'
+    + px + 'px;height:' + px + 'px">';
+}
+function pill(label, color){
+  return '<span class="pill" style="background:'+color+'26;color:'+color+'">'
+    + esc(label) + '</span>';
+}
+function avatar(p, cls){
+  if (!p) return '<span class="av" style="background:#2b3542;color:#6b7887" title="Unassigned">'
+    + '-</span>';
+  return '<span class="av" style="background:'+avColor(p.id)+'" title="'+esc(p.name)+'">'
+    + esc(p.initials)+'</span>';
+}
+function rollUp(mrs){
+  const c = {n:mrs.length, opened:0, draft:0, merged:0, closed:0, other:0};
+  for (const m of mrs) c[m.state in c ? m.state : 'other']++;
+  return c;
+}
+function shownKids(i){ return i.children.filter(c => CHIP_PROJECTS.has(c.project)); }
+
+function mrPips(roll){
+  if (!roll || !roll.n) return '';
+  return '<span class="mrpips">'
+    + MR_ORDER.filter(k => roll[k])
+        .map(k => '<i style="background:'+MRC[k]+'" title="'+roll[k]+' '+k+'"></i>').join('')
+    + roll.n + ' MR</span>';
+}
+/** A stable little random per issue, so a card's web is the same every render. */
+function seeded(key){
+  let h = 2166136261;
+  for (let i = 0; i < key.length; i++) h = Math.imul(h ^ key.charCodeAt(i), 16777619);
+  return () => {
+    h += 0x6D2B79F5;
+    let t = h;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const DUST_FROM = 15, DUST_FULL = 59, WEB_FROM = 60, WEB_FULL = 130;
+const ramp = (v, a, b) => Math.max(0, Math.min(1, (v - a) / (b - a)));
+
+/** A corner web: a few radial threads with sagging rings strung between them. */
+function webSvg(key, size, alpha){
+  const r = seeded(key);
+  const corner = Math.floor(r() * 2);   // top corners only; chips cover the bottom ones
+  const threads = 5 + Math.floor(r() * 3);
+  const rings = 3 + Math.floor(r() * 3);
+  const ang = [];
+  for (let i = 0; i < threads; i++)
+    ang.push((i + 0.5) / threads * (Math.PI / 2) + (r() - 0.5) * 0.16);
+  const P = (a, rad) => [(Math.cos(a) * rad).toFixed(1), (Math.sin(a) * rad).toFixed(1)];
+  let d = '';
+  for (const a of ang){
+    const [x, y] = P(a, 100 * (0.82 + r() * 0.18));
+    d += 'M0 0L' + x + ' ' + y;
+  }
+  for (let j = 0; j < rings; j++){
+    const rad = 100 * (0.22 + 0.74 * (j + 1) / rings) * (0.9 + r() * 0.16);
+    for (let i = 0; i < threads - 1; i++){
+      const [x1, y1] = P(ang[i], rad), [x2, y2] = P(ang[i + 1], rad);
+      const mid = (ang[i] + ang[i + 1]) / 2;
+      const [cx, cy] = P(mid, rad * (0.74 + r() * 0.1));   // the sag between threads
+      d += 'M' + x1 + ' ' + y1 + 'Q' + cx + ' ' + cy + ' ' + x2 + ' ' + y2;
+    }
+  }
+  const flip = ['', 'scaleX(-1)'][corner];
+  const pos = [['left','top'], ['right','top']][corner];
+  return '<svg class="web" viewBox="0 0 100 100" preserveAspectRatio="none" '
+    + 'style="width:' + size + 'px;height:' + size + 'px;' + pos[0] + ':0;' + pos[1] + ':0;'
+    + 'opacity:' + alpha.toFixed(3) + ';transform:' + flip + ';transform-origin:center'
+    + '"><g stroke-width="1.3" stroke-opacity=".9"><path d="'
+    + d + '"/></g></svg>';
+}
+function ageLayers(i, w, h){
+  if (i.cat === 'done') return '';
+  const d = i.daysInStatus || 0;
+  const dust = ramp(d, DUST_FROM, DUST_FULL), web = ramp(d, WEB_FROM, WEB_FULL);
+  if (!dust && !web) return '';
+  const r = seeded(i.key + 'd');
+  let out = '';
+  if (dust > 0.01)
+    out += '<i class="dust" style="opacity:' + (dust * 0.8).toFixed(3)
+      + ';transform:rotate(' + Math.round(r() * 360) + 'deg)"></i>';
+  if (web > 0.02)
+    out += webSvg(i.key, Math.round(Math.min(w, h) * (0.46 + web * 0.2)), 0.18 + web * 0.34);
+  return out;
+}
+
+/* ===================== load ===================== */
+let firstLoad = true;
+async function load(force){
+  const btn = $('#reload');
+  $('#status').textContent = force ? 'fetching from Jira' : 'loading';
+  if (force){ btn.disabled = true; btn.textContent = 'Refreshing'; }
+  startLoading();
+  try{
+    const r = await fetch('/api/board' + (force ? '?refresh=1' : ''));
+    const d = await r.json();
+    if (d.error){
+      const err = new Error(d.error);
+      err.setup = d.setup;
+      throw err;
+    }
+    DATA = d;
+    AV_INDEX = null;
+    $('#bname').textContent = d.board.name + ' - ' + d.counts.issues + ' items, '
+      + d.counts.children + ' links';
+    const today = new Date().toISOString().slice(0,10);
+    $('#status').textContent = d.generatedAt.startsWith(today)
+      ? 'as of ' + d.generatedAt.slice(11, 16)
+      : 'as of ' + d.generatedAt.slice(0, 16);
+    $('#status').title = 'Board read from Jira at ' + d.generatedAt;
+    if (firstLoad) loadPrefs();
+    dropStaleFocus();
+    $('#boot').classList.add('gone');
+    stopLoading();
+    relayout(firstLoad);
+    firstLoad = false;
+  }catch(e){
+    GHOST = false; clearInterval(LOAD_POLL); loadBar(0, false);
+    $('#boot').classList.remove('gone');
+    $('#boot').innerHTML = e.setup
+      ? '<div><b style="color:var(--tx)">This machine has no Jira credentials yet.</b>'
+        + '<br><br>In the paid-canvas folder run<br><code>./run setup</code><br><br>'
+        + 'It asks for your Atlassian email and an API token from<br>'
+        + '<code>id.atlassian.com/manage-profile/security/api-tokens</code>'
+        + '<br><br>then reload this page.</div>'
+      : '<div>Cannot reach the local server.<br><br>Start it with '
+        + '<code>./run</code> in the paid-canvas folder<br><br>'
+        + '<small style="color:#6b7887">' + esc(e.message) + '</small></div>';
+    $('#status').textContent = 'error';
+  }finally{
+    btn.disabled = false;
+    btn.textContent = 'Refresh';
+  }
+}
+function visible(i){
+  if (i.column !== 'Delivered') return true;
+  const cut = new Date(Date.now() - DELIVERED_DAYS*864e5).toISOString().slice(0,10);
+  return (i.resolved || i.updated || '') >= cut;
+}
+
+function dropStaleFocus(){
+  if (!F.focus) return;
+  const ok = F.focus.kind === 'person'
+    ? DATA.people.some(p => p.id === F.focus.id)
+    : !!DATA.epics[F.focus.id];
+  if (!ok) F.focus = null;
+}
+
+/* ===================== the quick filter ===================== */
+function rolesFor(i, id){
+  return [...((i.part && i.part[id]) || '')].filter(r => FILTER_ROLES.includes(r)).join('');
+}
+function focusRoles(i){
+  if (!F.focus || F.focus.kind !== 'person') return '';
+  return rolesFor(i, F.focus.id);
+}
+function matchesFocus(i){
+  if (!F.focus) return true;
+  if (F.focus.kind === 'person') return !!focusRoles(i);
+  return i.epic === F.focus.id;
+}
+function roleText(i){
+  const r = focusRoles(i);
+  return r ? [...r].map(c => ROLE[c]).filter(Boolean).join(', ') : '';
+}
+function setFocus(kind, id){
+  const same = F.focus && F.focus.kind === kind && F.focus.id === id;
+  F.focus = same ? null : {kind, id};
+  savePrefs();
+  syncQuickFilter();
+  render();              // the role badge on each card depends on who is in focus
+  applyHighlight();
+}
+
+/* ===================== card and chip metrics ===================== */
+/* One geometry, for every zoom. A card reserves room for everything it can ever show, so
+   its box never changes size and nothing is ever bumped by zooming. What is painted inside
+   the box is what changes: the key alone when far out, then the title, then the pills and
+   dates, then every linked merge request. */
+function chipMetrics(k){
+  const ln = lines(k.summary, CHIP_CPL);
+  const n = Math.min(k.mrs.length, MR_MAX) + (k.mrs.length > MR_MAX ? 1 : 0);
+  return {
+    lines: ln,
+    mrRows: n,
+    h: CHIP_PAD*2 + CHIP_KEY + 10 + ln*CHIP_LH + 12 + CHIP_PILL + (n ? 12 + n*CHIP_MR : 0),
+  };
+}
+function cardMetrics(i, kids){
+  const ln = lines(i.summary, SUM_CPL);
+  const head = PAD + KEY_ROW + 16 + ln*SUM_LH + 18 + PILL_ROW + 14 + META_ROW;
+  const chips = kids.map(chipMetrics);
+  const kidsH = chips.length
+    ? 22 + CHD_ROW + chips.reduce((a,c) => a + c.h, 0) + (chips.length-1)*CHIP_GAP
+    : 0;
+  return {h: head + kidsH + PAD, headH: head, lines: ln, chips};
+}
+
+/* ===================== layout ===================== */
+const colWidth = n => LANE_PAD*2 + n*CARD_W + (n-1)*SUB_GAP;
+
+/** Three bands: waiting to start, in flight, and done. */
+function colGroup(name, order){
+  if (name === 'Delivered') return 2;
+  const impl = order.indexOf('Implementation');
+  return impl > 0 && order.indexOf(name) < impl ? 0 : 1;
+}
+function gapAfter(names, idx){
+  return idx < names.length - 1
+      && colGroup(names[idx], names) !== colGroup(names[idx+1], names)
+    ? GROUP_GAP : COL_GAP;
+}
+
+/** Remember which card sits under the viewport centre, and where, so a re-layout can
+ *  put the same work back under the eye even though every coordinate has moved. */
+function anchorSnapshot(){
+  if (!CARDS.length) return null;
+  const {w,h} = vp();
+  const cx = (w/2 - view.x)/view.s, cy = (h/2 - view.y)/view.s;
+  let best = sel ? CARDS.find(c => c.i.key === sel) : null;
+  if (!best){
+    let bd = Infinity;
+    for (const c of CARDS){
+      const dx = c.x + c.w/2 - cx, dy = c.y + c.h/2 - cy;
+      const d = dx*dx + dy*dy;
+      if (d < bd){ bd = d; best = c; }
+    }
+  }
+  if (!best) return null;
+  // top-left, not centre: a card whose height changes keeps its visible corner still
+  return {key:best.i.key, ox:best.x - cx, oy:best.y - cy, s:view.s};
+}
+function anchorRestore(a){
+  if (!a) return false;
+  const c = CARDS.find(x => x.i.key === a.key);
+  if (!c) return false;
+  const {w,h} = vp();
+  view.s = a.s;
+  view.x = w/2 - (c.x - a.ox)*view.s;
+  view.y = h/2 - (c.y - a.oy)*view.s;
+  clampView(); apply();
+  return true;
+}
+
+/** Flow one column-and-swimlane cell into `n` sub-columns. */
+function flowCell(items, n, x0, y0){
+  const content = items.reduce((a,it) => a + it.h + CARD_GAP, 0);
+  const target = Math.max(1, content / n);
+  const out = [];
+  let sub = 0, y = y0, maxY = y0, any = false;
+  for (const it of items){
+    if (any && sub < n-1 && (y - y0) + it.h > target){ sub++; y = y0; any = false; }
+    out.push({...it, x:x0 + LANE_PAD + sub*(CARD_W + SUB_GAP), y, w:CARD_W});
+    y += it.h + CARD_GAP;
+    any = true;
+    maxY = Math.max(maxY, y);
+  }
+  return {cards:out, h:Math.max(maxY - y0, SWIM_MIN)};
+}
+
+/** Pick each column's sub-column count so the whole grid fits the viewport best. */
+function chooseWidths(colNames, keys, cell, vw, vh){
+  let best = null;
+  for (let T = 1200; T <= 40000; T += 600){
+    const n = colNames.map(c => {
+      let m = 1;
+      for (const g of keys){
+        const arr = cell.get(g + ' ' + c);
+        if (arr) m = Math.max(m, Math.ceil(arr.content / T));
+      }
+      return Math.max(1, Math.min(MAX_SUBCOLS, m));
+    });
+    const W = n.reduce((a,x) => a + colWidth(x), 0)
+      + colNames.reduce((a,_,idx) => a + (idx < colNames.length-1 ? gapAfter(colNames, idx) : 0), 0);
+    let H = 0;
+    for (const g of keys){
+      let hh = SWIM_MIN;
+      colNames.forEach((c, idx) => {
+        const arr = cell.get(g + ' ' + c);
+        if (arr) hh = Math.max(hh, arr.content / n[idx]);
+      });
+      H += SWIM_HEAD + hh + SWIM_GAP;
+    }
+    const s = Math.min(vw / W, vh / H);
+    // many splits fit the screen equally well; among those take the most compact one,
+    // so a column only grows wider when the extra width actually buys height
+    const area = W * H;
+    if (!best || s > best.s + 1e-9 || (s > best.s - 1e-9 && area < best.area))
+      best = {s, n, area};
+  }
+  return best.n;
+}
+
+var relayout = function(refit){
+  const anchor = refit ? null : anchorSnapshot();
+  const colNames = DATA.columns.map(c => c.name);
+  const vis = DATA.issues.filter(visible);
+
+  const present = new Set(vis.map(i => i.priority));
+  let keys = DATA.priorities.filter(p => present.has(p));
+  for (const p of present) if (!keys.includes(p)) keys.push(p);
+  if (!keys.length) keys = ['Medium'];
+
+  const cell = new Map();
+  const swimCount = new Map();
+  for (const i of vis){
+    const g = i.priority;
+    swimCount.set(g, (swimCount.get(g) || 0) + 1);
+    const k = g + ' ' + i.column;
+    if (!cell.has(k)) cell.set(k, {items:[], content:0});
+    const kids = shownKids(i);
+    const seen = new Set();
+    const mrs = i.mrs.concat(kids.flatMap(k => k.mrs || []))
+      .filter(m => !seen.has(m.id) && seen.add(m.id));
+    const m = {i, kids, mr:rollUp(mrs), ...cardMetrics(i, kids)};
+    const e = cell.get(k);
+    e.items.push(m);
+    e.content += m.h + CARD_GAP;
+  }
+
+  const {w:vw, h:vh} = vp();
+  const n = chooseWidths(colNames, keys, cell, vw - 90, vh - chromeTop() - 110);
+
+  COLS = []; SWIMS = []; CARDS = [];
+  let x = 0;
+  colNames.forEach((name, idx) => {
+    const def = DATA.columns.find(c => c.name === name) || {};
+    COLS.push({name, x, w:colWidth(n[idx]), n:n[idx], max:def.max,
+               group:colGroup(name, colNames),
+               count:vis.filter(i => i.column === name).length});
+    x += colWidth(n[idx]) + (idx < colNames.length-1 ? gapAfter(colNames, idx) : 0);
+  });
+  const totalW = Math.max(x, 1200);
+
+  let y = 0;
+  keys.forEach((g, idx) => {
+    const top = y;
+    const bodyY = y + SWIM_HEAD;
+    let hh = SWIM_MIN;
+    for (const col of COLS){
+      const e = cell.get(g + ' ' + col.name);
+      if (!e) continue;
+      const r = flowCell(e.items, col.n, col.x, bodyY);
+      CARDS.push(...r.cards);
+      hh = Math.max(hh, r.h);
+    }
+    SWIMS.push({key:g, label:g, dot:PRIOC[g] || PRIOC.None, count:swimCount.get(g) || 0,
+                y:top, h:SWIM_HEAD + hh, alt:idx % 2 === 1});
+    y = bodyY + hh + SWIM_GAP;
+  });
+  WORLD = {w:totalW, h:Math.max(y - SWIM_GAP, 800)};
+
+  render();
+  buildRails();
+  buildQuickFilter();
+  applyHighlight();
+  if (refit) fit();
+  else if (!anchorRestore(anchor)){ clampView(); apply(); }
+  drawMini();
+};
+
+/* ===================== render ===================== */
+function render(){
+  const out = [];
+  for (const c of COLS)
+    out.push('<div class="colband" style="left:'+c.x+'px;width:'+c.w+'px;height:'
+      + WORLD.h+'px"></div>');
+  COLS.forEach((c, n) => {
+    const next = COLS[n+1];
+    if (!next || next.group === c.group) return;
+    out.push('<div class="grpline" style="left:'+((c.x + c.w + next.x)/2)+'px;height:'
+      + WORLD.h+'px"></div>');
+  });
+
+  for (const s of SWIMS){
+    out.push('<div class="swim'+(s.alt?' alt':'')+'" style="top:'+s.y+'px;width:'+WORLD.w
+      + 'px;height:'+s.h+'px">'
+      + '<div class="swimHd"><i class="sd" style="background:'+s.dot+'"></i>'
+      + '<span class="sl">'+esc(s.label)+'</span>'
+      + '<span class="sc">'+s.count+'</span></div></div>');
+  }
+
+  for (const c of CARDS){
+    const i = c.i;
+    if (GHOST || i.ghost){ out.push(ghostCard(c)); continue; }
+    const role = roleText(i);
+    const ac = i.assignee
+      ? ';--ac:'+avColor(i.assignee.id, '.62')+';--ah:'+avColor(i.assignee.id) : '';
+    out.push('<div class="card" data-k="'+i.key+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'
+      + c.w+'px;height:'+c.h+'px'+ac+'">'
+      + ageLayers(i, c.w, c.h)
+      + '<div class="big" style="top:'+(PAD+KEY_ROW)+'px;height:'
+      + (c.headH - PAD*2 - KEY_ROW)+'px">'+esc(i.key)+'</div>'
+      + '<div class="body">'
+      + '<div class="krow">'+typeIcon(i.type, 40)+'<span class="k">'+esc(i.key)+'</span>'
+      + '<span class="sp"></span>' + mrPips(c.mr) + avatar(i.assignee) + '</div>'
+      + '<div class="sum">'+esc(i.summary)+'</div>'
+      + '<div class="pills">'
+      + pill(i.priority, PRIOC[i.priority] || PRIOC.None)
+      + pill(i.status, CATC[i.cat])
+      + (role ? pill(role, '#e3a008') : '')
+      + '</div>'
+      + '<div class="meta">'
+      + '<span class="age">'+i.daysInStatus+'d here</span>'
+      + (i.epic ? '<span class="ep">'+esc(epicName(i.epic))+'</span>' : '')
+      + '<span class="lb">'+i.age+'d old</span>'
+      + (i.due ? '<span class="lb">due '+esc(i.due)+'</span>' : '')
+      + '</div>'
+      + (c.kids.length ? '<div class="chd">'+c.kids.length+' linked</div>' : '')
+      + '</div></div>');
+
+    if (c.kids.length){
+      let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0)
+                            + (c.chips.length-1)*CHIP_GAP);
+      c.kids.forEach((k, idx) => {
+        const m = c.chips[idx];
+        const shown = k.mrs.slice(0, MR_MAX);
+        const more = k.mrs.length - shown.length;
+        out.push('<div class="kid'+(k.impl?'':' rel')+'" data-kk="'+esc(k.key)+'" data-owner="'
+          + esc(i.key)+'" style="left:'+(c.x+PAD)+'px;top:'+(c.y+ky)+'px;width:'+CHIP_W
+          + 'px;height:'+m.h+'px">'
+          + '<div class="kk">'+typeIcon(k.type, 30)+esc(k.key)
+          + (k.mr.n ? '<span class="mrpips"><i style="background:'
+              + MRC[MR_ORDER.find(x => k.mr[x])]+'"></i>'+k.mr.n+'</span>' : '')
+          + '<span class="sp"></span>' + avatar(k.assignee) + '</div>'
+          + '<div class="ks">'+esc(k.summary)+'</div>'
+          + '<div class="kp">'+pill(k.status, CATC[k.cat])+'</div>'
+          + (k.mrs.length
+              ? '<div class="mrs">'
+                + shown.map(mr => '<div class="mr"><i style="background:'
+                    + (MRC[mr.state]||MRC.other)+'"></i><b>'+esc(mr.repo)+' !'+esc(mr.iid)
+                    + '</b><span class="t">'+esc(mr.state)+', '+esc(mr.author||'')
+                    + '</span></div>').join('')
+                + (more ? '<div class="mr"><i style="background:#39414f"></i><b>+'+more
+                    + ' more</b></div>' : '')
+                + '</div>'
+              : '')
+          + '</div>');
+        ky += m.h + CHIP_GAP;
+      });
+    }
+  }
+  world.innerHTML = out.join('');
+  if (sel){
+    const el = world.querySelector('.card[data-k="'+sel+'"]');
+    if (el) el.classList.add('sel');
+  }
+}
+
+function ghostCard(c){
+  const w = n => 'width:' + n + '%';
+  let out = '<div class="card ghost" style="left:'+c.x+'px;top:'+c.y+'px;width:'+c.w
+    + 'px;height:'+c.h+'px"><i class="sh" style="animation-delay:'
+    + ((c.i.key.length + Math.round(c.y)) % 900 / 1000).toFixed(2) + 's"></i>'
+    + '<div class="big" style="top:'+(PAD+KEY_ROW)+'px">PAID-000</div>'
+    + '<div class="body">'
+    + '<div class="krow"><i class="gico"></i><span class="k">PAID-000</span>'
+    + '<span class="sp"></span><i class="gav"></i></div>';
+  for (let n = 0; n < c.lines; n++)
+    out += '<div class="gline" style="margin-top:'+(n ? 12 : 16)+'px;'
+      + w(n === c.lines-1 ? 58 : 96)+'"></div>';
+  out += '<div class="pills"><i class="gpill"></i><i class="gpill" style="width:150px"></i></div>'
+    + '<div class="meta"><i class="gline s" style="width:38%"></i></div>'
+    + (c.kids.length ? '<div class="chd"><i class="gline s" style="width:22%"></i></div>' : '')
+    + '</div></div>';
+
+  if (c.kids.length){
+    let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0) + (c.chips.length-1)*CHIP_GAP);
+    c.chips.forEach((m, idx) => {
+      out += '<div class="kid ghost" style="left:'+(c.x+PAD)+'px;top:'+(c.y+ky)+'px;width:'
+        + CHIP_W+'px;height:'+m.h+'px"><i class="sh" style="animation-delay:'
+        + (((idx + 3) * 130) % 900 / 1000).toFixed(2) + 's"></i>'
+        + '<div class="kk"><i class="gico" style="width:30px;height:30px"></i>'
+        + '<span class="sp"></span><i class="gav" style="width:34px;height:34px"></i></div>';
+      for (let n = 0; n < m.lines; n++)
+        out += '<div class="gline" style="margin-top:10px;width:'
+          + (n === m.lines-1 ? 52 : 92) + '%"></div>';
+      out += '<div class="kp"><i class="gpill"></i></div></div>';
+      ky += m.h + CHIP_GAP;
+    });
+  }
+  return out;
+}
+
+/* ===================== quick filter bar ===================== */
+function buildQuickFilter(){
+  const pc = new Map(), ec = new Map();
+  for (const c of CARDS){
+    const i = c.i;
+    for (const id of Object.keys(i.part || {}))
+      if (rolesFor(i, id)) pc.set(id, (pc.get(id) || 0) + 1);
+    if (i.epic) ec.set(i.epic, (ec.get(i.epic) || 0) + 1);
+  }
+  const byCount = name => (a,b) => b[1] - a[1] || name(a[0]).localeCompare(name(b[0]));
+  const people = [...pc.entries()].sort(byCount(personName));
+  const epics = [...ec.entries()].sort(byCount(epicName));
+
+  // only the squad gets a chip; anyone else is still reachable from a card's People list
+  $('#qfPeople').innerHTML = '<span class="qlab">People</span>' + people.map(([id, n]) => {
+    const p = DATA.people.find(x => x.id === id);
+    if (!p || !p.team) return '';
+    return '<button class="qp" data-kind="person" data-id="'+esc(id)+'" style="background:'
+      + avColor(id)+'" title="'+esc(p.name)+' - '+n+' items">'+esc(p.initials)+'</button>';
+  }).join('');
+  $('#qfEpics').innerHTML = '<span class="qlab">Epics</span>' + epics.map(([key, n]) =>
+    '<button class="qe" data-kind="epic" data-id="'+esc(key)+'" title="'+esc(key)+' '
+    + esc(epicName(key))+' - '+n+' items"><i></i><b class="ek">'+esc(key)+'</b>'
+    + '<span class="t">'+esc(epicName(key))
+    + '</span><span class="c">'+n+'</span></button>').join('');
+
+  syncQuickFilter();
+  layoutChrome();
+}
+function syncQuickFilter(){
+  for (const el of document.querySelectorAll('#qf .qp, #qf .qe'))
+    el.classList.toggle('on', !!F.focus && F.focus.kind === el.dataset.kind
+      && F.focus.id === el.dataset.id);
+  const b = $('#clearFocus');
+  b.classList.toggle('show', !!F.focus);
+  if (!F.focus) return;
+  const label = F.focus.kind === 'person' ? personName(F.focus.id) : epicName(F.focus.id);
+  b.textContent = label + '   ×';
+  b.title = 'Clear this filter';
+}
+$('#qf').addEventListener('click', e => {
+  const b = e.target.closest('[data-kind]');
+  if (b) setFocus(b.dataset.kind, b.dataset.id);
+});
+$('#clearFocus').onclick = () => { if (F.focus) setFocus(F.focus.kind, F.focus.id); };
+
+/* ===================== sticky rails ===================== */
+function chromeTop(){ return 46 + $('#qf').offsetHeight; }
+function layoutChrome(){
+  const t = chromeTop();
+  railTop.style.top = t + 'px';
+  railLeft.style.top = (t + RAIL_H) + 'px';
+  $('#side').style.top = (t + RAIL_H) + 'px';   // clear the filters and the column rail
+  $('#boot').style.top = t + 'px';
+}
+function buildRails(){
+  railTop.innerHTML = COLS.map(c => {
+    const over = c.max != null && c.count > c.max;
+    return '<div class="rc"><span class="n">'+esc(c.name)+'</span>'
+      + '<span class="c">'+c.count+'</span>'
+      + (c.max != null ? '<span class="w'+(over?' over':'')+'">/'+c.max+'</span>' : '')
+      + '</div>';
+  }).join('');
+  railLeft.innerHTML = SWIMS.map(s =>
+    '<div class="rs"><i style="background:'+s.dot+'"></i>'+esc(s.label)
+    + ' <b>'+s.count+'</b></div>').join('');
+}
+function placeRails(){
+  const cols = railTop.children;
+  for (let i = 0; i < cols.length; i++){
+    const c = COLS[i];
+    const x = view.x + c.x*view.s, w = c.w*view.s;
+    const el = cols[i];
+    el.style.transform = 'translateX(' + x + 'px)';
+    el.style.width = w + 'px';
+    el.style.opacity = (x + w < 0 || x > innerWidth) ? '0' : '1';
+    el.classList.toggle('tight', w < 150);
+    el.classList.toggle('narrow', w < 96);
+    const n = el.firstElementChild;
+    const want = w < 120 ? shortName(c.name) : c.name;
+    if (n.textContent !== want) n.textContent = want;
+  }
+  const rows = railLeft.children;
+  const top = chromeTop() + RAIL_H;
+  for (let i = 0; i < rows.length; i++){
+    const s = SWIMS[i];
+    const y0 = view.y + s.y*view.s, y1 = y0 + s.h*view.s;
+    const el = rows[i];
+    // the pill appears once the swimlane's own header has scrolled out of sight
+    const on = y0 < top - 6 && y1 > top + 34;
+    el.classList.toggle('show', on);
+    if (on) el.style.transform = 'translateY(8px)';
+  }
+}
+
+/* ===================== view transform ===================== */
+let moving = false, movingT = 0, railPending = false;
+function setLod(){
+  let n = 0;
+  while (n < LOD.length && view.s >= LOD[n]) n++;
+  world.className = 'lod' + n + (moving ? ' moving' : '');
+}
+function apply(){
+  world.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.s+')';
+  setLod();
+  $('#zoomlbl').textContent = Math.round(view.s/SREAD*100) + '%';
+  if (!railPending){
+    railPending = true;
+    requestAnimationFrame(() => { railPending = false; placeRails(); });
+  }
+}
+function vp(){ return {w:stage.clientWidth, h:stage.clientHeight}; }
+function clampView(){
+  const {w,h} = vp(), m = 400;
+  view.x = Math.min(m, Math.max(w - WORLD.w*view.s - m, view.x));
+  view.y = Math.min(m, Math.max(h - WORLD.h*view.s - m, view.y));
+}
+function fit(){
+  const {w,h} = vp();
+  const top = chromeTop() + RAIL_H + 14;
+  const s = Math.min((w-80)/WORLD.w, (h-top-96)/WORLD.h);
+  view.s = Math.max(0.02, Math.min(s, 1));
+  view.x = (w - WORLD.w*view.s)/2;
+  view.y = top;
+  apply(); drawMini();
+}
+function zoomAt(cx, cy, factor){
+  const ns = Math.max(0.02, Math.min(6, view.s*factor));
+  const k = ns / view.s;
+  view.x = cx - (cx - view.x)*k;
+  view.y = cy - (cy - view.y)*k;
+  view.s = ns;
+  clampView(); apply(); drawMini();
+}
+function centerOn(c, s){
+  const {w,h} = vp();
+  if (s) view.s = s;
+  view.x = w/2 - (c.x + c.w/2)*view.s;
+  view.y = h/2 - (c.y + c.h/2)*view.s;
+  clampView(); apply(); drawMini();
+}
+function beginMove(){ moving = true; world.classList.add('moving'); clearTimeout(movingT); }
+function endMove(){
+  clearTimeout(movingT);
+  movingT = setTimeout(() => {
+    moving = false; world.classList.remove('moving'); drawMini();
+  }, 130);
+}
+
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  beginMove();
+  if (e.ctrlKey || e.metaKey) zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0032));
+  else {
+    view.x -= e.shiftKey ? e.deltaY : e.deltaX;
+    view.y -= e.shiftKey ? 0 : e.deltaY;
+    clampView(); apply(); drawMini();
+  }
+  endMove();
+}, {passive:false});
+
+let drag = null;
+stage.addEventListener('pointerdown', e => {
+  if (e.button !== 0) return;
+  drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y, moved:0,
+          card:e.target.closest('.card'), kid:e.target.closest('.kid')};
+  try { stage.setPointerCapture(e.pointerId); } catch(_){}
+});
+stage.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.moved = Math.max(drag.moved, Math.abs(dx) + Math.abs(dy));
+  if (drag.moved > 4){
+    beginMove(); stage.classList.add('grab');
+    view.x = drag.vx + dx; view.y = drag.vy + dy;
+    clampView(); apply();
+  }
+});
+stage.addEventListener('pointerup', () => {
+  stage.classList.remove('grab');
+  if (drag && drag.moved <= 4){
+    if (drag.kid) window.open(DATA.baseUrl + '/browse/' + drag.kid.dataset.kk, '_blank');
+    else select(drag.card ? drag.card.dataset.k : null);
+  }
+  drag = null; endMove(); drawMini();
+});
+stage.addEventListener('dblclick', e => {
+  const c = e.target.closest('.card');
+  if (c) window.open(DATA.baseUrl + '/browse/' + c.dataset.k, '_blank');
+});
+
+/* ===================== detail panel ===================== */
+function select(key){
+  sel = key;
+  for (const el of world.querySelectorAll('.card.sel')) el.classList.remove('sel');
+  if (!key){ $('#side').classList.remove('open'); $('#mini').classList.remove('shift'); return; }
+  const el = world.querySelector('.card[data-k="'+key+'"]');
+  if (el) el.classList.add('sel');
+  const i = DATA.issues.find(x => x.key === key);
+  if (!i) return;
+
+  $('#sk').innerHTML = '<a href="'+DATA.baseUrl+'/browse/'+i.key+'" target="_blank">'+esc(i.key)
+    + '</a>';
+  $('#ss').textContent = i.summary;
+  $('#spills').innerHTML = typeIcon(i.type, 15)
+    + pill(i.priority, PRIOC[i.priority] || PRIOC.None)
+    + pill(i.status, CATC[i.cat]);
+  $('#srow').innerHTML =
+      (i.column === i.status ? '' : '<span>column <b>'+esc(i.column)+'</b></span>')
+    + (i.epic ? '<span>epic <b data-epic="'+esc(i.epic)+'" style="cursor:pointer">'
+        + esc(epicName(i.epic))+'</b></span>' : '')
+    + '<span><b>'+i.daysInStatus+' days</b> in this status'
+    + (i.movedBy ? ', moved by '+esc(i.movedBy) : '')+'</span>'
+    + '<span><b>'+i.age+' days</b> old, since '+esc(i.created)+'</span>'
+    + '<span>updated '+esc(i.updated)+'</span>'
+    + (i.due ? '<span>due <b>'+esc(i.due)+'</b></span>' : '')
+    + (i.labels.length ? '<span>'+i.labels.map(esc).join(', ')+'</span>' : '');
+
+  const people = Object.entries(i.part || {})
+    .map(([id, roles]) => ({id, name:personName(id),
+                            roles:[...roles].map(c => ROLE[c]).filter(Boolean)}))
+    .sort((a,b) => a.name.localeCompare(b.name));
+  const mrs = i.mrs.concat(i.children.flatMap(c => c.mrs || []))
+    .filter((m, n, arr) => arr.findIndex(x => x.id === m.id) === n)
+    .sort((a,b) => MR_ORDER.indexOf(a.state) - MR_ORDER.indexOf(b.state)
+                   || b.updated.localeCompare(a.updated));
+  const mrLi = m => '<a class="li" href="'+esc(m.url)+'" target="_blank">'
+    + '<div class="l1"><i class="sd" style="background:'+(MRC[m.state]||MRC.other)+'"></i>'
+    + esc(m.repo)+' !'+esc(m.iid)
+    + '<span class="rl">'+esc(m.state)+'</span></div>'
+    + '<div class="l2">'+esc(m.title)+'</div>'
+    + '<div class="l3"><span>'+esc(m.author || 'unknown')+'</span>'
+    + (m.reviewers.length ? '<span>review '+esc(m.reviewers.join(', '))+'</span>' : '')
+    + (m.branch ? '<span>'+esc(m.branch)+' to '+esc(m.target || 'master')+'</span>' : '')
+    + (m.comments ? '<span>'+m.comments+' comments</span>' : '')
+    + '<span>'+esc(m.updated)+'</span></div></a>';
+  const li = k => '<a class="li" href="'+DATA.baseUrl+'/browse/'+k.key+'" target="_blank">'
+    + '<div class="l1"><i class="sd" style="background:'+CATC[k.cat]+'"></i>'+esc(k.key)
+    + '<span class="rl">'+esc(k.relLabel)+'</span></div>'
+    + '<div class="l2">'+esc(k.summary)+'</div>'
+    + '<div class="l3"><span style="color:'+CATC[k.cat]+'">'+esc(k.status)+'</span>'
+    + '<span>'+esc(k.assignee ? k.assignee.name : 'Unassigned')+'</span>'
+    + '<span>'+esc(k.type)+'</span></div></a>';
+  const timeline = i.spans.map(sp =>
+    '<div class="sp2"><span class="d">'+sp.days+'d</span>'
+    + '<span class="n">'+esc(sp.status || 'Created')+'</span>'
+    + (sp.by ? '<span class="w">'+esc(sp.by)+'</span>' : '')+'</div>').join('');
+  const impl = i.children.filter(c => c.impl), rel = i.children.filter(c => !c.impl);
+
+  $('#slist').innerHTML =
+      (i.spans.length ? '<div class="lh">Status history</div>'
+        + '<div class="tl">'+timeline+'</div>' : '')
+    + (mrs.length ? '<div class="lh">Merge requests, '+mrs.length+'</div>'
+        + mrs.map(mrLi).join('') : '')
+    + (people.length
+        ? '<div class="lh">People, '+people.length+'</div><div class="pp">'
+          + people.map(p => '<span data-person="'+esc(p.id)+'" title="Filter the board by '
+              + esc(p.name)+'"><b>'+esc(p.name)+'</b> '+esc(p.roles.join(', '))+'</span>')
+              .join('') + '</div>'
+        : '')
+    + (impl.length
+        ? '<div class="lh">Implementation, '+impl.length+'</div>'+impl.map(li).join('') : '')
+    + (rel.length ? '<div class="lh">Related, '+rel.length+'</div>'+rel.map(li).join('') : '')
+    + (i.children.length ? '' : '<div class="lh">No linked work items</div>');
+  $('#side').classList.add('open');
+  $('#mini').classList.add('shift');
+}
+$('#sideX').onclick = () => select(null);
+$('#side').addEventListener('click', e => {
+  const p = e.target.closest('[data-person]');
+  if (p){ setFocus('person', p.dataset.person); return; }
+  const ep = e.target.closest('[data-epic]');
+  if (ep) setFocus('epic', ep.dataset.epic);
+});
+
+/* ===================== search plus focus, both dim rather than hide ===================== */
+function applyHighlight(){
+  const q = F.q.trim().toLowerCase();
+  hitIdx = -1;
+  if (!q && !F.focus){
+    hits = null;
+    for (const el of world.querySelectorAll('.dim,.hit')) el.classList.remove('dim','hit');
+    $('#qn').textContent = '';
+    drawMini();
+    return;
+  }
+  hits = new Set();
+  const kidHits = new Set();
+  for (const c of CARDS){
+    const i = c.i;
+    if (!matchesFocus(i)) continue;
+    let m = !q;
+    if (q){
+      m = (i.key+' '+i.summary+' '+i.type+' '+i.status+' '
+        + (i.assignee?i.assignee.name:'')+' '+i.labels.join(' ')+' '
+        + (i.epic ? epicName(i.epic) : '')).toLowerCase().includes(q);
+      for (const k of c.kids){
+        if ((k.key+' '+k.summary+' '+k.status+' '+(k.assignee?k.assignee.name:''))
+            .toLowerCase().includes(q)){
+          kidHits.add(k.key + '@' + i.key); m = true;
+        }
+      }
+    }
+    if (m) hits.add(i.key);
+  }
+  for (const el of world.querySelectorAll('.card')){
+    const on = hits.has(el.dataset.k);
+    el.classList.toggle('dim', !on);
+    el.classList.toggle('hit', on);
+  }
+  for (const el of world.querySelectorAll('.kid')){
+    const own = hits.has(el.dataset.owner);
+    el.classList.toggle('dim', !own);
+    el.classList.toggle('hit', own && kidHits.has(el.dataset.kk + '@' + el.dataset.owner));
+  }
+  $('#qn').textContent = hits.size + ' / ' + CARDS.length;
+  drawMini();
+}
+function nextHit(){
+  if (!hits || !hits.size) return;
+  const list = CARDS.filter(c => hits.has(c.i.key));
+  hitIdx = (hitIdx + 1) % list.length;
+  centerOn(list[hitIdx], Math.max(view.s, SREAD));
+  select(list[hitIdx].i.key);
+}
+$('#q').addEventListener('input', e => { F.q = e.target.value; applyHighlight(); });
+$('#q').addEventListener('keydown', e => {
+  if (e.key === 'Escape'){ e.target.value = ''; F.q = ''; applyHighlight(); e.target.blur(); }
+  if (e.key === 'Enter'){ e.preventDefault(); nextHit(); }
+});
+
+/* ===================== controls ===================== */
+$('#zi').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 1.4);
+$('#zo').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 1/1.4);
+$('#fit').onclick = () => relayout(true);
+$('#hundred').onclick = () => zoomAt(innerWidth/2, innerHeight/2, SREAD/view.s);
+$('#reload').onclick = () => load(true);
+
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === '/'){ e.preventDefault(); $('#q').focus(); return; }
+  if (e.key === 'f' || e.key === 'F'){ relayout(true); return; }
+  if (e.key === '1'){ zoomAt(innerWidth/2, innerHeight/2, SREAD/view.s); return; }
+  if (e.key === 'Enter'){ nextHit(); return; }
+  if (e.key === 'Escape'){
+    select(null);
+    $('#q').value = ''; F.q = '';
+    if (F.focus){ F.focus = null; savePrefs(); syncQuickFilter(); render(); }
+    applyHighlight();
+    return;
+  }
+  const step = e.shiftKey ? 700 : 220;
+  if (e.key === 'ArrowLeft') view.x += step;
+  else if (e.key === 'ArrowRight') view.x -= step;
+  else if (e.key === 'ArrowUp') view.y += step;
+  else if (e.key === 'ArrowDown') view.y -= step;
+  else return;
+  e.preventDefault(); clampView(); apply(); drawMini();
+});
+let rz = 0;
+addEventListener('resize', () => {
+  if (!DATA) return;
+  clearTimeout(rz);
+  rz = setTimeout(() => relayout(false), 220);
+  layoutChrome(); clampView(); apply();
+});
+
+/* ===================== minimap ===================== */
+const mini = $('#mini'), mctx = mini.getContext('2d');
+function drawMini(){
+  if (!DATA) return;
+  const W = mini.width, H = mini.height;
+  const s = Math.min(W/WORLD.w, H/WORLD.h);
+  const ox = (W - WORLD.w*s)/2, oy = (H - WORLD.h*s)/2;
+  mctx.fillStyle = '#0b0e13'; mctx.fillRect(0,0,W,H);
+  for (const c of COLS){
+    mctx.fillStyle = '#141b23';
+    mctx.fillRect(ox + c.x*s, oy, c.w*s, WORLD.h*s);
+  }
+  mctx.strokeStyle = '#313c4b'; mctx.lineWidth = 1;
+  for (const sw of SWIMS){
+    mctx.beginPath();
+    mctx.moveTo(ox, oy + sw.y*s);
+    mctx.lineTo(ox + WORLD.w*s, oy + sw.y*s);
+    mctx.stroke();
+  }
+  for (const c of CARDS){
+    const on = !hits || hits.has(c.i.key);
+    mctx.fillStyle = on ? (CATC[c.i.cat] || '#7d8da3') : '#2a323d';
+    mctx.globalAlpha = on ? 0.92 : 0.3;
+    mctx.fillRect(ox + c.x*s, oy + c.y*s, Math.max(0.8, c.w*s), Math.max(0.8, c.h*s));
+  }
+  mctx.globalAlpha = 1;
+  const {w,h} = vp();
+  mctx.strokeStyle = '#58a6ff'; mctx.lineWidth = 1.5;
+  mctx.strokeRect(ox + (-view.x/view.s)*s, oy + (-view.y/view.s)*s,
+                  (w/view.s)*s, (h/view.s)*s);
+  mini._m = {s, ox, oy};
+}
+function jump(e){
+  if (!mini._m) return;
+  const r = mini.getBoundingClientRect(), {s, ox, oy} = mini._m;
+  const wx = (e.clientX - r.left - ox)/s, wy = (e.clientY - r.top - oy)/s;
+  const {w,h} = vp();
+  view.x = w/2 - wx*view.s; view.y = h/2 - wy*view.s;
+  clampView(); apply(); drawMini();
+}
+mini.addEventListener('pointerdown', jump);
+mini.addEventListener('pointermove', e => { if (e.buttons === 1) jump(e); });
+
+/* ===================== skeleton while loading ===================== */
+/* No overlay: the board lays itself out as usual and every card is drawn as a shimmering
+   ghost. On a refresh the real geometry is already known, so each card ghosts in place and
+   nothing shifts. On a cold start there is no board yet, so a plausible one is invented. */
+let GHOST = false, LOAD_POLL = 0;
+
+function ghostIssue(n, col, prio){
+  const len = [34, 52, 78, 96, 120][n % 5];
+  const kids = n % 3 === 0 ? (n % 2) + 1 : 0;
+  const child = k => ({
+    key:'PAID-000', project:'BACK', summary:'x'.repeat([40,72,104][k % 3]),
+    type:'Task', status:'', cat:'new', priority:'Medium', assignee:null,
+    impl:true, relLabel:'', mrs:[], mr:{n:0}, updated:'',
+  });
+  return {
+    key:'PAID-000', summary:'x'.repeat(len), type:'Task', status:'', cat:'new',
+    column:col, priority:prio, assignee:null, epic:null, labels:[], created:'', updated:'',
+    resolved:null, due:null, rank:'', part:{}, statusSince:'', daysInStatus:0, age:0,
+    movedBy:null, spans:[], mrs:[], mr:{n:0, opened:0, draft:0, merged:0, closed:0, other:0},
+    children: Array.from({length:kids}, (_, k) => child(k)),
+    ghost:true,
+  };
+}
+/** A board-shaped guess, used only before the first fetch returns. */
+function ghostData(){
+  const cols = ['NEW','UNCLEAR','Ready','Implementation','Code Review','Testing','QA Review',
+                'Merging','REGRESSION','Deployment','Delivered'];
+  const per = {NEW:[0,2,0], UNCLEAR:[2,12,1], Ready:[3,18,2], Implementation:[1,5,0],
+               'Code Review':[2,5,0], Testing:[1,4,0], 'QA Review':[0,1,0], Merging:[0,2,0],
+               REGRESSION:[1,3,0], Deployment:[0,1,0], Delivered:[3,14,1]};
+  const prios = ['High','Medium','Low'];
+  const issues = [];
+  let n = 0;
+  for (const c of cols)
+    prios.forEach((p, pi) => { for (let k = 0; k < per[c][pi]; k++) issues.push(ghostIssue(n++, c, p)); });
+  return {
+    generatedAt:'', baseUrl:'', board:{name:''}, priorities:prios, epics:{}, people:[],
+    typeIcons:{}, columns:cols.map(name => ({name, max:null})), issues,
+    counts:{issues:0, children:0}, teamSource:'',
+  };
+}
+
+function loadBar(pct, on){
+  $('#load').classList.toggle('on', on);
+  $('#loadBar').style.width = Math.max(2, Math.round(pct * 100)) + '%';
+}
+async function pollProgress(){
+  try{
+    const p = await (await fetch('/api/progress')).json();
+    if (p.phase === 'idle') return;
+    const base = ({board:0, linked:1, mrs:2, building:3}[p.phase] || 0) / 4;
+    loadBar(base + (p.total ? p.done / p.total : 0) / 4, true);
+  }catch(_){}
+}
+function startLoading(){
+  GHOST = true;
+  loadBar(0.04, true);
+  clearInterval(LOAD_POLL);
+  LOAD_POLL = setInterval(pollProgress, 260);
+  if (DATA) render();                      // ghost the board that is already on screen
+  else { DATA = ghostData(); relayout(true); }
+}
+function stopLoading(){
+  GHOST = false;
+  clearInterval(LOAD_POLL);
+  loadBar(1, true);
+  setTimeout(() => loadBar(0, false), 420);
+}
+
+/* ===================== remember choices between sessions ===================== */
+const PREFS = 'paid-canvas.prefs';
+function savePrefs(){
+  try{ localStorage.setItem(PREFS, JSON.stringify({focus:F.focus})); }catch(_){}
+}
+function loadPrefs(){
+  try{
+    const p = JSON.parse(localStorage.getItem(PREFS) || 'null');
+    if (!p) return;
+    if (p.focus && (p.focus.kind === 'person' || p.focus.kind === 'epic') && p.focus.id)
+      F.focus = p.focus;
+  }catch(_){}
+}
+
+layoutChrome();
+load(false);
+</script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+# Start the PAID canvas server (if it is not already up) and open it.
+set -euo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PORT="${PAID_CANVAS_PORT:-8777}"
+URL="http://127.0.0.1:$PORT/"
+LOG="$HERE/.server.log"
+
+PY="${PYTHON:-}"
+if [ -z "$PY" ]; then
+  for c in python3 python; do
+    if command -v "$c" >/dev/null 2>&1 && "$c" -c 'import sys;exit(0 if sys.version_info>=(3,8) else 1)' 2>/dev/null; then
+      PY="$c"; break
+    fi
+  done
+fi
+if [ -z "$PY" ]; then
+  echo "needs Python 3.8 or newer on PATH (or set PYTHON=/path/to/python3)" >&2
+  exit 1
+fi
+
+open_url() {
+  if command -v open >/dev/null 2>&1; then open "$1"
+  elif command -v xdg-open >/dev/null 2>&1; then xdg-open "$1" >/dev/null 2>&1
+  elif command -v start >/dev/null 2>&1; then start "$1"
+  else echo "open $1 in a browser"
+  fi
+}
+
+case "${1:-}" in
+  stop)
+    pkill -f "$HERE/server.py" >/dev/null 2>&1 && echo "stopped" || echo "not running"
+    exit 0 ;;
+  setup|check)
+    exec "$PY" "$HERE/server.py" "--$1" ;;
+  log)
+    exec tail -n "${2:-40}" "$LOG" ;;
+esac
+
+if curl -fsS -o /dev/null "${URL}api/health" 2>/dev/null; then
+  echo "already running on $URL"
+else
+  # a missing token should be said plainly rather than left in a log nobody reads
+  if ! "$PY" "$HERE/server.py" --check >/dev/null 2>&1; then
+    "$PY" "$HERE/server.py" --check || true
+    echo
+    echo "run  ./run setup  to store your Atlassian email and API token" >&2
+  fi
+  nohup "$PY" "$HERE/server.py" >"$LOG" 2>&1 &
+  for _ in $(seq 1 40); do
+    curl -fsS -o /dev/null "${URL}api/health" 2>/dev/null && break
+    sleep 0.25
+  done
+  if ! curl -fsS -o /dev/null "${URL}api/health" 2>/dev/null; then
+    echo "server did not come up; last lines of $LOG:" >&2
+    tail -n 15 "$LOG" >&2
+    exit 1
+  fi
+  echo "started on $URL  (log: $LOG)"
+fi
+open_url "$URL"
