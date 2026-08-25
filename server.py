@@ -20,34 +20,12 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.json")
 
-
-def _file_conf():
-    try:
-        with open(CONFIG_FILE) as fh:
-            d = json.load(fh)
-        return d if isinstance(d, dict) else {}
-    except (OSError, ValueError):
-        return {}
-
-
-FILE_CONF = _file_conf()
-
-
-def conf(key, *env_names, default=None):
-    """Settings come from the environment first, then config.json, then a default."""
-    for n in env_names:
-        if os.environ.get(n):
-            return os.environ[n]
-    if FILE_CONF.get(key) not in (None, ""):
-        return FILE_CONF[key]
-    return default
-
-
-BASE = str(conf("base", "PAID_JIRA_BASE", "JIRA_BASE",
-                default="https://pnlfintech.atlassian.net")).rstrip("/")
-BOARD_ID = int(conf("boardId", "PAID_BOARD_ID", default=209))
-PORT = int(conf("port", "PAID_CANVAS_PORT", default=8777))
-CACHE_TTL = int(conf("cacheTtl", "PAID_CANVAS_TTL", default=180))
+# The board, the site and the GitLab-for-Jira app are the same for everyone on the squad,
+# so they live here rather than in anyone's config. Only the credentials differ.
+BASE = "https://pnlfintech.atlassian.net"
+BOARD_ID = 209
+PORT = int(os.environ.get("PAID_CANVAS_PORT", "8777"))
+CACHE_TTL = 180                                     # seconds a snapshot is reused
 HERE = os.path.dirname(os.path.abspath(__file__))
 
 BOARD_FIELDS = (
@@ -68,17 +46,16 @@ PRIORITY_ORDER = ["Highest", "High", "Medium", "Low", "Lowest", "None"]
 
 # Jira's development panel, fed by the GitLab for Jira app. The instance key doubles as the
 # applicationType the dev-status endpoint expects; "gitlab" silently returns nothing.
-DEV_APP = conf("devApp", "PAID_DEV_APP",
-               default="oAuth-gitlab-jira-connect-gitlab.com")
+DEV_APP = "oAuth-gitlab-jira-connect-gitlab.com"
 DEV_CACHE = os.path.join(HERE, ".dev-status.json")
 ICON_CACHE = os.path.join(HERE, ".type-icons.json")
-DEV_WORKERS = int(conf("devWorkers", "PAID_DEV_WORKERS", default=12))
+DEV_WORKERS = 12
 MR_STATE = {"OPEN": "opened", "MERGED": "merged", "DECLINED": "closed"}
 
 # Who counts as the squad. Anyone can end up on a PAID item as the assignee of a linked
 # ticket in another project; the people filter wants the people who work on PAID itself.
 TEAM_FILE = os.path.join(HERE, "team.json")
-TEAM_MIN_ITEMS = int(conf("teamMinItems", "PAID_TEAM_MIN_ITEMS", default=3))
+TEAM_MIN_ITEMS = 3                                  # only used if team.json is missing
 NOT_A_PERSON = re.compile(r"\bbot\b|automation|minion|^jira\b", re.I)
 
 
@@ -148,6 +125,16 @@ def days_between(a, b):
     return max(0, int((tb - ta) // 86400))
 
 
+def _file_conf():
+    """config.json holds an email and an API token, and nothing else."""
+    try:
+        with open(CONFIG_FILE) as fh:
+            d = json.load(fh)
+        return d if isinstance(d, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
 class NeedsSetup(Exception):
     """No usable Jira credentials on this machine."""
 
@@ -187,8 +174,9 @@ def acli_account():
 
 def credentials():
     """Email and API token: environment, then config.json, then the Atlassian CLI."""
-    email = conf("email", "JIRA_EMAIL", "PAID_JIRA_EMAIL")
-    token = conf("token", "JIRA_TOKEN", "PAID_JIRA_TOKEN") or keychain_token()
+    saved = _file_conf()
+    email = os.environ.get("JIRA_EMAIL") or saved.get("email")
+    token = os.environ.get("JIRA_TOKEN") or saved.get("token") or keychain_token()
     if not email:
         email = acli_account()[0]
     if not email or not token:
@@ -210,21 +198,17 @@ def setup():
           "https://id.atlassian.com/manage-profile/security/api-tokens\n")
     email = input("Atlassian email: ").strip()
     token = input("API token: ").strip()
-    base = input(f"Jira base URL [{BASE}]: ").strip() or BASE
-    board = input(f"Board id [{BOARD_ID}]: ").strip() or str(BOARD_ID)
     if not email or not token:
         print("nothing written", file=sys.stderr)
         return 1
     try:
-        who = Jira(token, email, base.rstrip("/")).get("/rest/api/3/myself")
+        who = Jira(token, email).get("/rest/api/3/myself")
         print("\nsigned in as", who.get("displayName"))
     except Exception as e:
         print("\ncould not sign in:", e, file=sys.stderr)
         return 1
-    data = dict(FILE_CONF)
-    data.update(email=email, token=token, base=base.rstrip("/"), boardId=int(board))
     with open(CONFIG_FILE, "w") as fh:
-        json.dump(data, fh, indent=2)
+        json.dump({"email": email, "token": token}, fh, indent=2)
     os.chmod(CONFIG_FILE, 0o600)
     print("wrote", CONFIG_FILE)
     return 0

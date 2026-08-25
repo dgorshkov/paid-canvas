@@ -13,8 +13,7 @@ A local, zoomable board for Jira project PAID. `server.py` reads Jira and serves
    against Jira, and writes `config.json` (git-ignored, mode 0600). Ask the user to create the
    token and paste it themselves; never put a token in a command line or a file you write.
 4. `./run` starts the server on 127.0.0.1:8777 and opens the browser.
-5. Optional: copy `team.example.json` to `team.json` and list the squad's display names, so
-   the People filter shows the team rather than a derived guess.
+`team.json` ships with the repo and lists the squad; there is nothing to configure there.
 
 If `./run check` fails with 401 or 403, the token is wrong or the account cannot read board
 209. Both are for the user to fix in Jira; there is nothing to change in this repo.
@@ -29,8 +28,9 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
 
 ## Rules
 
-- Never commit `config.json`, `team.json`, `.dev-status.json`, `.type-icons.json` or
-  `.server.log`. They are git-ignored; keep them that way.
+- Never commit `config.json`, `.dev-status.json`, `.type-icons.json` or `.server.log`. They
+  are git-ignored; keep them that way. `config.json` holds an email and an API token and
+  nothing else.
 - The Jira token stays server-side. The browser only ever receives board data.
 - Card geometry reserves room for everything a card can show, so zoom never re-lays out the
   board. If you change what is drawn, change the metrics that reserve room for it.

@@ -1,9 +1,4 @@
 {
   "email": "you@pnlfin.tech",
-  "token": "your Atlassian API token",
-
-  "base": "https://pnlfintech.atlassian.net",
-  "boardId": 209,
-  "port": 8777,
-  "cacheTtl": 180
+  "token": "your Atlassian API token"
 }

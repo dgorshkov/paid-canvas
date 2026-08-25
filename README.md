@@ -29,6 +29,8 @@ Already using the Atlassian CLI? Skip setup. The server reads `acli`'s token fro
 keychain and its email from `~/.config/acli/jira_config.yaml`.
 
 Prefer environment variables? `JIRA_EMAIL` and `JIRA_TOKEN` override everything else.
+`config.json` holds those two values and nothing else; the board, the Jira site and everything
+else are the same for the whole squad and live in `server.py`.
 
 You need read access to the PAID project and its board. Open the page before credentials exist
 and it tells you which command to run.
@@ -53,16 +55,11 @@ and it tells you which command to run.
 | the board loads but no merge requests appear | the first dev-status pass takes about a minute in the background; refresh after |
 | port 8777 is taken | `PAID_CANVAS_PORT=9000 ./run` |
 
-Every setting is listed at the end of this file, and `config.example.json` shows the shape of
-the config file.
-
 ## The team roster
 
-The People filter shows the squad rather than everyone who has ever touched a PAID ticket.
-Without a `team.json` the server works it out: anyone with a role on at least three PAID items
-that is not "assignee of a linked ticket". To set the roster by hand, copy
-`team.example.json` to `team.json` and put the display names in it. `team.json` is git-ignored,
-so your roster stays local.
+`team.json` lists the squad, and the People filter shows those people only. Edit it to add or
+remove someone. Delete it and the server works the roster out instead: anyone with a role on at
+least three PAID items that is not "assignee of a linked ticket".
 
 ## Layout
 
@@ -184,24 +181,18 @@ reads its assignee from the board fetch, with no extra request.
 
 The token never leaves the server; the browser only ever sees board data.
 
-Every setting takes an environment variable, a `config.json` key, or its default, in that
-order.
-
-| Variable | config.json | Default |
+| Setting | Where | Default |
 |---|---|---|
-| `JIRA_EMAIL` | `email` | the `acli` account |
-| `JIRA_TOKEN` | `token` | the `acli` keychain entry |
-| `PAID_JIRA_BASE` | `base` | https://pnlfintech.atlassian.net |
-| `PAID_BOARD_ID` | `boardId` | 209 |
-| `PAID_CANVAS_PORT` | `port` | 8777 |
-| `PAID_CANVAS_TTL` | `cacheTtl` | 180 |
-| `PAID_DEV_APP` | `devApp` | oAuth-gitlab-jira-connect-gitlab.com |
-| `PAID_DEV_WORKERS` | `devWorkers` | 12 |
-| `PAID_TEAM_MIN_ITEMS` | `teamMinItems` | 3 |
+| Atlassian email | `JIRA_EMAIL`, `config.json`, or the `acli` account | none |
+| API token | `JIRA_TOKEN`, `config.json`, or the `acli` keychain entry | none |
+| port | `PAID_CANVAS_PORT` | 8777 |
+
+Everything else is a constant near the top of `server.py`: the Jira site, board 209, the
+180-second cache, and the GitLab-for-Jira app key the dev-status endpoint needs.
 
 `python3 server.py --once out.json` writes a snapshot and exits, without starting a server.
 `--check` verifies the credentials, `--setup` stores them.
 
-Three files are written next to `server.py` and none are shared: `config.json` holds the
-credentials, `.dev-status.json` caches merge requests per issue, `.type-icons.json` caches the
-work-type SVGs. Deleting any of them costs one slower fetch.
+Three files are written next to `server.py` and all three are git-ignored: `config.json` holds
+your credentials, `.dev-status.json` caches merge requests per issue, `.type-icons.json` caches
+the work-type SVGs. Deleting a cache costs one slower fetch.
