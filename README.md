@@ -99,7 +99,8 @@ inward links.
 
 ## Quick filters
 
-Three rows above the board, one click each. People are avatars, epics are named chips, both
+Two rows above the board, one click each. People and craft share the first row, epics have the
+second. People are avatars, epics are named chips, both
 ordered by how many items they touch. Clicking one highlights its cards and dims everything
 else; nothing is hidden, so the shape of the board and every card's position stay put.
 
@@ -112,6 +113,11 @@ touch" on a PAID ticket, so the board reads it from who is assigned: pick `back`
 tickets, does that kind of work. A PAID story often waits unassigned while its BACK ticket is
 already taken, which is why linked tickets count. Each matching card names the person who
 matched.
+
+Two chips catch what the others miss. The dashed circle at the end of the avatars highlights
+everything with no assignee — 73 cards, 54 of them in Ready. The dashed **unknown** pill
+highlights everything no craft group touches, on the card or on any linked ticket — 69 cards,
+46 in Ready. Those two are how you find the work nobody has picked up or classified.
 
 `specialties.json` holds the mapping. It ships with the repo:
 
