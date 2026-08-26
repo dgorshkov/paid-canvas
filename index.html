@@ -422,6 +422,7 @@ function avColor(id, alpha){
     + (alpha ? ' / ' + alpha : '') + ')';
 }
 function personName(id){ return (DATA.people.find(p => p.id === id) || {}).name || id; }
+const lastName = n => (n || '').trim().split(/\s+/).pop() || n;
 function epicName(key){ return DATA.epics[key] ? DATA.epics[key].summary : key; }
 function lines(text, cpl){ return Math.max(1, Math.ceil((text || '').length / cpl)); }
 function typeIcon(name, px){
@@ -962,16 +963,17 @@ function buildQuickFilter(){
   }
 
   const byCount = name => (a,b) => b[1] - a[1] || name(a[0]).localeCompare(name(b[0]));
-  const people = [...pc.entries()].sort(byCount(personName));
   const epics = [...ec.entries()].sort(byCount(epicName));
+  // the squad, always all of it, always in the same place: by last name
+  const people = DATA.people.filter(p => p.team)
+    .sort((a,b) => lastName(a.name).localeCompare(lastName(b.name))
+                || a.name.localeCompare(b.name));
 
   // one row: the squad, then anything nobody has taken, then the three crafts and the rest
-  const avatars = people.map(([id, n]) => {
-    const p = DATA.people.find(x => x.id === id);
-    if (!p || !p.team) return '';
-    return '<button class="qp" data-kind="person" data-id="'+esc(id)+'" style="background:'
-      + avColor(id)+'" title="'+esc(p.name)+' - '+n+' items">'+esc(p.initials)+'</button>';
-  }).join('');
+  const avatars = people.map(p =>
+    '<button class="qp" data-kind="person" data-id="'+esc(p.id)+'" style="background:'
+    + avColor(p.id)+'" title="'+esc(p.name)+' - '+(pc.get(p.id) || 0)+' items">'
+    + esc(p.initials)+'</button>').join('');
   const craftChip = k =>
     '<button class="qc" data-kind="craft" data-id="'+esc(k)+'" title="'
     + esc(crafts[k].map(personName).join(', '))+'">'

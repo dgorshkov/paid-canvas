@@ -101,8 +101,8 @@ inward links.
 ## Quick filters
 
 Two rows above the board, one click each. People and craft share the first row, epics have the
-second. People are avatars, epics are named chips, both
-ordered by how many items they touch. Clicking one highlights its cards and dims everything
+second. People are avatars in last-name order, so a face keeps its place whatever the board is
+doing. Epics are named chips ordered by how many items they touch. Clicking one highlights its cards and dims everything
 else; nothing is hidden, so the shape of the board and every card's position stay put.
 
 One filter is active at a time, whichever row it comes from. Clicking a second replaces the
