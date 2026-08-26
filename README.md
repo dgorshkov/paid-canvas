@@ -99,12 +99,32 @@ inward links.
 
 ## Quick filters
 
-Two rows above the board, one click each. People are avatars, epics are named chips, both
+Three rows above the board, one click each. People are avatars, epics are named chips, both
 ordered by how many items they touch. Clicking one highlights its cards and dims everything
 else; nothing is hidden, so the shape of the board and every card's position stay put.
 
-One filter is active at a time. Clicking a second replaces the first, and clicking the active
-one clears it, as does the amber button in the toolbar or `Esc`.
+One filter is active at a time, whichever row it comes from. Clicking a second replaces the
+first, and clicking the active one clears it, as does the amber button in the toolbar or `Esc`.
+
+**Craft** stands in for a field Jira does not have. There is no "which repositories does this
+touch" on a PAID ticket, so the board reads it from who is assigned: pick `back`, `web` or
+`mobile` and it highlights every item where the assignee, or the assignee of one of its linked
+tickets, does that kind of work. A PAID story often waits unassigned while its BACK ticket is
+already taken, which is why linked tickets count. Each matching card names the person who
+matched.
+
+`specialties.json` holds the mapping. It ships with the repo:
+
+```json
+{
+  "back":   ["Andrey Gurev", "Oleg Belovandreev", "Michael Zamaraev", "Toghrul Mirzayev"],
+  "web":    ["Aleksandr Opekunov"],
+  "mobile": ["Andrey Dovzhenko", "Marina Vasilova"]
+}
+```
+
+Anyone left out of every group is never matched by a craft filter. Add or move a name and hit
+Refresh.
 
 A person matches on more than the assignee field: assignee, author of any comment, or assignee
 of a linked work item. Filing a ticket does not count, so reporter and creator are ignored.

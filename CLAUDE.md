@@ -16,7 +16,8 @@ A local, zoomable board for Jira project PAID. `server.py` reads Jira and serves
    the token into the prompt themselves; never put a token in a command line or in a file you
    write, and never echo it back.
 4. `./run` starts the server on 127.0.0.1:8777 and opens the browser.
-`team.json` ships with the repo and lists the squad; there is nothing to configure there.
+`team.json` (the squad) and `specialties.json` (who does back, web or mobile work) ship with
+the repo; there is nothing to configure in either.
 
 If `./run check` fails with 401 or 403, the token is wrong or the account cannot read board
 209. Both are for the user to fix in Jira; there is nothing to change in this repo.

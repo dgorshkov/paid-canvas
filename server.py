@@ -55,6 +55,9 @@ MR_STATE = {"OPEN": "opened", "MERGED": "merged", "DECLINED": "closed"}
 # Who counts as the squad. Anyone can end up on a PAID item as the assignee of a linked
 # ticket in another project; the people filter wants the people who work on PAID itself.
 TEAM_FILE = os.path.join(HERE, "team.json")
+# Jira has no field for the repositories an issue touches, so the board reads a person's
+# craft instead: who is assigned tells you roughly what kind of work it is.
+SPECIALTY_FILE = os.path.join(HERE, "specialties.json")
 TEAM_MIN_ITEMS = 3                                  # only used if team.json is missing
 NOT_A_PERSON = re.compile(r"\bbot\b|automation|minion|^jira\b", re.I)
 
@@ -108,6 +111,24 @@ _progress = {"phase": "idle", "done": 0, "total": 0, "note": ""}
 
 def stage(phase, done=0, total=0, note=""):
     _progress.update(phase=phase, done=done, total=total, note=note)
+
+
+def specialties(people):
+    """Craft -> the account ids of the people who do it, from specialties.json."""
+    try:
+        with open(SPECIALTY_FILE) as fh:
+            groups = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(groups, dict):
+        return {}
+    by_name = {p["name"]: p["id"] for p in people.values()}
+    out = {}
+    for craft, names in groups.items():
+        ids = [by_name[n] for n in (names or []) if n in by_name]
+        if ids:
+            out[craft] = ids
+    return out
 
 
 def now_utc():
@@ -553,6 +574,7 @@ def build(jira):
         team_source = f"derived, {TEAM_MIN_ITEMS}+ PAID items"
     for p in people.values():
         p["team"] = p["id"] in team
+    crafts = specialties(people)
     return {
         "generatedAt": time.strftime("%Y-%m-%d %H:%M:%S"),
         "board": {"id": BOARD_ID, "name": cfg.get("name"),
@@ -565,6 +587,7 @@ def build(jira):
         "epics": epics,
         "people": sorted(people.values(), key=lambda p: p["name"]),
         "teamSource": team_source,
+        "specialties": crafts,
         "issues": out,
         "roles": {"a": "assignee", "r": "reporter", "x": "created it",
                   "c": "commented", "k": "linked work"},
@@ -575,6 +598,7 @@ def build(jira):
                    "linkedFetched": len(linked), "linkedWanted": len(keys),
                    "people": len(people),
                    "team": sum(1 for p in people.values() if p["team"]),
+                   "crafts": {k: len(v) for k, v in crafts.items()},
                    "childrenNoAssignee": sum(
                        1 for i in out for c in i["children"] if not c["assignee"]),
                    "withMrs": sum(1 for i in out if i["mr"]["n"]),
