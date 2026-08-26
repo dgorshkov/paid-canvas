@@ -384,9 +384,9 @@ const NO_ONE = '__unassigned__';
 const MRC = {opened:'#39c5cf', draft:'#6b7887', merged:'#a371f7', closed:'#f85149',
              locked:'#f0883e', other:'#4b5a6e'};
 const MR_ORDER = ['opened','draft','merged','closed','other'];
-// The projects that carry the actual implementation. Everything else a story links to —
-// support tickets, other PAID items, design, ideas — stays in the detail panel only.
-const CHIP_PROJECTS = new Set(['ANDR','IOS','DEV','BACK','LOC']);
+// Which projects get a chip: the server decides, so the board and the people filter agree
+// on what counts as working on a story.
+let CHIP_PROJECTS = new Set(['ANDR','IOS','DEV','BACK','LOC']);
 const DELIVERED_DAYS = 30;                  // how far back the Delivered column reaches
 const SHORT = {'NEW':'NEW', 'UNCLEAR':'UNCL', 'Ready':'READY', 'Implementation':'IMPL',
                'Code Review':'CR', 'Testing':'TEST', 'QA Review':'QA', 'Merging':'MERGE',
@@ -533,6 +533,7 @@ async function load(force){
     }
     DATA = d;
     AV_INDEX = null;
+    if (d.chipProjects) CHIP_PROJECTS = new Set(d.chipProjects);
     $('#bname').textContent = d.board.name + ' - ' + d.counts.issues + ' items, '
       + d.counts.children + ' links';
     const today = new Date().toISOString().slice(0,10);

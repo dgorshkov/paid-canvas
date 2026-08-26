@@ -36,6 +36,10 @@ BOARD_FIELDS = (
 # One letter per way a person can be involved in a PAID item.
 ROLE_ASSIGNEE, ROLE_REPORTER, ROLE_CREATOR = "a", "r", "x"
 ROLE_COMMENT, ROLE_LINKED = "c", "k"
+# The projects that carry implementation, and the only chips the board draws. Holding a
+# ticket in any other project — an idea, a support case — is not work on the story, so it
+# does not put you on the card.
+CHIP_PROJECTS = ("ANDR", "IOS", "DEV", "BACK", "LOC")
 LINKED_FIELDS = "summary,status,priority,assignee,issuetype,updated,resolutiondate,parent"
 
 # Outward links that mean "this story spawned that work item".
@@ -549,7 +553,8 @@ def build(jira):
         for cm in (f.get("comment") or {}).get("comments") or []:
             involve(person(cm.get("author")), ROLE_COMMENT)
         for c in kids:
-            involve(c["assignee"], ROLE_LINKED)
+            if c["project"] in CHIP_PROJECTS:
+                involve(c["assignee"], ROLE_LINKED)
         moves, spans, since_at = status_history(i, now)
         own_mrs = prs_for(i["key"])
         seen_mr = set()
@@ -628,6 +633,7 @@ def build(jira):
         "issues": out,
         "roles": {"a": "assignee", "r": "reporter", "x": "created it",
                   "c": "commented", "k": "linked work"},
+        "chipProjects": list(CHIP_PROJECTS),
         "mrIndex": {"source": "jira dev-status", "error": dev_error, "sweeping": dev_running,
                     "covered": len(dev), "wanted": len(dev_wanted),
                     "mrs": sum(len(v.get("prs") or []) for v in dev.values())},

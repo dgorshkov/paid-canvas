@@ -132,8 +132,10 @@ Anyone left out of every group is never matched by a craft filter. Add or move a
 Refresh.
 
 A person matches on more than the assignee field: assignee, author of any comment, or assignee
-of a linked work item. Filing a ticket does not count, so reporter and creator are ignored.
-Each matching card shows an amber badge naming the roles that matched.
+of a linked work item in one of the five implementation projects. Filing a ticket does not
+count, so reporter and creator are ignored, and neither does holding a linked idea or support
+ticket — if the board does not draw the chip, its assignee does not put you on the card. Each
+matching card shows an amber badge naming the roles that matched.
 
 The People row holds the squad only, set by `team.json` or worked out from the board. Anyone
 can land on a PAID item as the assignee of a linked ticket in another project — a translator on
