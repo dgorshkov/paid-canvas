@@ -197,7 +197,9 @@ Click a card for the detail panel, which lists every linked item with its relati
 
 The detail panel has a priority and a status dropdown, and both write straight to Jira. The
 workflow on this project is permissive, so every status is reachable from every other one and
-the same twelve transitions apply to every ticket.
+the same twelve transitions apply to every ticket. Statuses are listed in board order, left
+column to right, with Discarded last because no column shows it. Priorities run Highest to
+Lowest.
 
 On success the board re-reads that one issue from Jira and moves the card to its new column and
 swimlane. The card stays selected and the camera does not move: an edit reflows the board, and

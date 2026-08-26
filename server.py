@@ -239,6 +239,27 @@ def setup():
     return 0
 
 
+def ordered_transitions(jira, issues, columns):
+    """Every status this workflow can reach, in board order rather than alphabetical.
+
+    The workflow here is permissive, so one issue's transition list applies to all. Statuses
+    that no column shows, Discarded among them, come last."""
+    if not issues:
+        return []
+    raw = jira.get(f"/rest/api/3/issue/{issues[0]['key']}/transitions").get("transitions") or []
+    order = {c["name"]: c["order"] for c in columns}
+    where = {}                                  # status name -> the column that shows it
+    for i in issues:
+        where.setdefault(i["status"], i["column"])
+    last = len(columns)
+
+    def rank(t):
+        col = where.get(t["to"]["name"])
+        return (order.get(col, last), t["to"]["name"])
+
+    return [{"id": t["id"], "to": t["to"]["name"]} for t in sorted(raw, key=rank)]
+
+
 def status_history(issue, now):
     """Every status move on one issue, oldest first, plus how long each state lasted."""
     cl = issue.get("changelog") or {}
@@ -598,11 +619,7 @@ def build(jira):
         "columns": columns,
         "priorities": PRIORITY_ORDER,
         "priorityList": jira.get("/rest/api/3/priority"),
-        "transitions": sorted(
-            ({"id": t["id"], "to": t["to"]["name"]}
-             for t in (jira.get(f"/rest/api/3/issue/{out[0]['key']}/transitions")
-                       .get("transitions") or [])) if out else [],
-            key=lambda t: t["to"]),
+        "transitions": ordered_transitions(jira, out, columns),
         "typeIcons": type_icons(icon_urls),
         "epics": epics,
         "people": sorted(people.values(), key=lambda p: p["name"]),
