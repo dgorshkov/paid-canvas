@@ -75,7 +75,7 @@ least three PAID items that is not "assignee of a linked ticket".
 The eleven board columns are fixed vertical bands, named in a rail that stays pinned below the
 quick filters. Swimlanes are horizontal rows, one per priority; a swimlane's label pins to the
 left edge once its own header scrolls out of sight. A cell holding many cards wraps into
-sub-columns, up to three wide, and each column takes the fewest it can while keeping the grid
+sub-columns, up to four wide, and each column takes the fewest it can while keeping the grid
 close to the shape of the screen. Delivered may go ten wide, so the archive reads as a band
 rather than a tower. A column narrower than its name shows a short form in the rail.
 Delivered reaches back 30 days.
