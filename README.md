@@ -188,11 +188,24 @@ chips are what drive that height — they carry full titles and up to four merge
 
 Drag to pan. `cmd`+scroll or trackpad pinch to zoom; plain scroll pans. `F` fits the board,
 `1` returns to reading size, `/` focuses search, `Enter` jumps to the next match, `Esc` clears
-the filter and the search. The minimap at bottom right jumps the
-view.
+the filter and the search. The minimap at bottom right jumps the view.
 
 Click a card for the detail panel, which lists every linked item with its relationship
 ("created", "causes", "is caused by"). Click a chip or double-click a card to open Jira.
+
+## Changing a ticket
+
+The detail panel has a priority and a status dropdown, and both write straight to Jira. The
+workflow on this project is permissive, so every status is reachable from every other one and
+the same twelve transitions apply to every ticket.
+
+On success the board re-reads that one issue from Jira and moves the card to its new column and
+swimlane, keeping it selected and keeping your zoom and position. The days-in-status clock
+resets, because Jira reset it. Moving a ticket to Discarded takes it off the board, since no
+column maps to that status.
+
+On failure the reason appears under the dropdowns, the dropdown goes back to what it was, and
+nothing local changes. Nothing else on a ticket can be edited from here.
 Search dims the same way a quick filter does, and the two combine.
 
 The active filter persists in the browser.

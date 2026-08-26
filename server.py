@@ -106,6 +106,7 @@ def type_icons(seen):
     return {n: cache[n] for n in seen if n in cache}
 
 
+_columns_by_status = {}          # status id -> board column, filled by build()
 _progress = {"phase": "idle", "done": 0, "total": 0, "note": ""}
 
 
@@ -274,6 +275,17 @@ class Jira:
         self.auth = base64.b64encode(
             f"{email or credentials()[0]}:{token}".encode()).decode()
 
+    def send(self, method, path, body):
+        """PUT or POST with a JSON body. Jira answers 204 with no content on success."""
+        req = urllib.request.Request(
+            self.base + path, method=method,
+            data=json.dumps(body).encode(),
+            headers={"Authorization": "Basic " + self.auth,
+                     "Accept": "application/json", "Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=45) as r:
+            raw = r.read()
+        return json.loads(raw) if raw else {}
+
     def get(self, path, **params):
         url = self.base + path
         if params:
@@ -336,6 +348,7 @@ def slim(key, f):
 
 def build(jira):
     cfg = jira.get(f"/rest/agile/1.0/board/{BOARD_ID}/configuration")
+    global _columns_by_status
     columns, status_to_col, order = [], {}, 0
     for c in cfg["columnConfig"]["columns"]:
         ids = [s["id"] for s in c["statuses"]]
@@ -345,6 +358,7 @@ def build(jira):
         order += 1
 
     stage("board", 0, 0, "reading board " + str(BOARD_ID))
+    _columns_by_status = dict(status_to_col)
     issues, start = [], 0
     while True:
         d = jira.get(f"/rest/agile/1.0/board/{BOARD_ID}/issue",
@@ -583,6 +597,12 @@ def build(jira):
         "baseUrl": BASE,
         "columns": columns,
         "priorities": PRIORITY_ORDER,
+        "priorityList": jira.get("/rest/api/3/priority"),
+        "transitions": sorted(
+            ({"id": t["id"], "to": t["to"]["name"]}
+             for t in (jira.get(f"/rest/api/3/issue/{out[0]['key']}/transitions")
+                       .get("transitions") or [])) if out else [],
+            key=lambda t: t["to"]),
         "typeIcons": type_icons(icon_urls),
         "epics": epics,
         "people": sorted(people.values(), key=lambda p: p["name"]),
@@ -730,6 +750,52 @@ def mr_roll_up(mrs):
     return {"n": len(mrs), **c}
 
 
+def apply_change(key, priority=None, transition=None):
+    """Write one field to Jira, then read the issue back and return what the board needs.
+
+    The card is moved by the caller from these values, so they come from Jira rather than
+    from what we hoped we wrote."""
+    jira = Jira(jira_token())
+    if priority:
+        jira.send("PUT", f"/rest/api/3/issue/{key}",
+                  {"fields": {"priority": {"name": priority}}})
+    if transition:
+        jira.send("POST", f"/rest/api/3/issue/{key}/transitions",
+                  {"transition": {"id": str(transition)}})
+
+    fresh = jira.get(f"/rest/api/3/issue/{key}",
+                     fields="status,priority,updated,resolutiondate,created",
+                     expand="changelog")
+    f = fresh["fields"]
+    now = now_utc()
+    _moves, spans, since_at = status_history(fresh, now)
+    sname, scat = status_of(f)
+    patch = {
+        "key": key,
+        "status": sname,
+        "cat": scat,
+        "column": _columns_by_status.get((f.get("status") or {}).get("id"), sname),
+        "priority": (f.get("priority") or {}).get("name") or "None",
+        "updated": (f.get("updated") or "")[:10],
+        "resolved": (f.get("resolutiondate") or "")[:10] or None,
+        "statusSince": since_at[:10],
+        "daysInStatus": days_between(since_at, now),
+        "age": days_between((f.get("created") or "")[:19], now),
+        "movedBy": spans[-1]["by"] if spans else None,
+        "spans": [sp for sp in spans if sp["days"]],
+        "onBoard": (f.get("status") or {}).get("id") in _columns_by_status,
+    }
+    # keep the cached snapshot in step, so a later refresh does not undo what you just saw
+    with _lock:
+        data = _cache.get("data")
+        if data:
+            for i in data["issues"]:
+                if i["key"] == key:
+                    i.update({k: v for k, v in patch.items() if k != "onBoard"})
+                    break
+    return patch
+
+
 _cache = {"at": 0, "data": None, "err": None}
 _lock = threading.Lock()
 
@@ -758,6 +824,31 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         self.end_headers()
         self.wfile.write(body)
+
+    def do_POST(self):
+        p = urllib.parse.urlparse(self.path)
+        m = re.match(r"^/api/issue/([A-Z][A-Z0-9]+-\d+)$", p.path)
+        if not m:
+            return self._send(404, "not found", "text/plain")
+        try:
+            n = int(self.headers.get("Content-Length") or 0)
+            body = json.loads(self.rfile.read(n) or b"{}")
+        except ValueError:
+            return self._send(400, json.dumps({"error": "bad json"}), "application/json")
+        try:
+            patch = apply_change(m.group(1), body.get("priority"), body.get("transition"))
+            return self._send(200, json.dumps(patch), "application/json")
+        except urllib.error.HTTPError as e:
+            detail = ""
+            try:
+                detail = e.read().decode()[:400]
+            except Exception:
+                pass
+            return self._send(200, json.dumps(
+                {"error": f"Jira said {e.code}. {detail}"}), "application/json")
+        except Exception as e:
+            return self._send(200, json.dumps(
+                {"error": f"{type(e).__name__}: {e}"}), "application/json")
 
     def do_GET(self):
         p = urllib.parse.urlparse(self.path)

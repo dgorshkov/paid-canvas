@@ -25,7 +25,9 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
 ## Layout of the code
 
 - `server.py` — Jira fetch, normalisation, merge requests via Jira's dev-status endpoint, and
-  a small HTTP server. Endpoints: `/`, `/api/board`, `/api/progress`, `/api/health`.
+  a small HTTP server. Endpoints: `/`, `/api/board`, `/api/progress`, `/api/health`, and
+  `POST /api/issue/<KEY>` which sets a priority or runs a transition, then reads the issue
+  back and returns what the board needs to move the card.
 - `index.html` — the whole client, one file. Canvas layout in world coordinates, pan and zoom
   by CSS transform, two detail levels.
 - `README.md` — what the board shows and every setting.
@@ -36,5 +38,7 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
   are git-ignored; keep them that way. `config.json` holds an email and an API token and
   nothing else.
 - The Jira token stays server-side. The browser only ever receives board data.
+- `POST /api/issue/<KEY>` writes to real tickets. Never call it to try something out; a status
+  change resets that ticket's days-in-status clock, which the board uses to spot stale work.
 - Card geometry reserves room for everything a card can show, so zoom never re-lays out the
   board. If you change what is drawn, change the metrics that reserve room for it.

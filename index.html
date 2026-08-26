@@ -28,7 +28,6 @@ button,select,input{font:inherit;color:inherit}
 .btn{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:5px 9px;
   font-size:12px;cursor:pointer;white-space:nowrap;line-height:1}
 .btn:hover{border-color:#3f4c5e;background:#212a36}
-.btn.icon{padding:5px 9px;font-variant-numeric:tabular-nums;min-width:28px}
 .btn.on{background:#1f6feb33;border-color:#1f6feb;color:#cde3ff}
 #clearFocus{background:#e3a00826;border-color:var(--focus);color:#ffd77a;display:none;
   max-width:300px;overflow:hidden;text-overflow:ellipsis}
@@ -228,8 +227,16 @@ button,select,input{font:inherit;color:inherit}
 #side .ss{font-size:15px;line-height:1.4;margin-top:6px;font-weight:600}
 #side .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--tx2)}
 #side .row b{color:var(--tx);font-weight:600}
-#side .spills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+#side .spills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
 #side .spills .pill{font-size:10px;padding:3px 8px;border-radius:6px;letter-spacing:.04em}
+#side .spills select{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;
+  padding:3px 6px;font-size:11px;font-weight:700;cursor:pointer;outline:none;max-width:150px}
+#side .spills select:hover{border-color:#4b5a6e}
+#side .spills select:disabled{opacity:.5;cursor:progress}
+#side .spills select:focus{border-color:var(--accent)}
+#sideMsg{font-size:11px;margin-top:8px;min-height:0;color:var(--tx3)}
+#sideMsg.bad{color:var(--p-highest)}
+#sideMsg.busy{color:var(--accent)}
 #side .list{overflow:auto;padding:6px 14px 24px;flex:1}
 #side .lh{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tx3);
   margin:14px 0 8px}
@@ -261,11 +268,6 @@ button,select,input{font:inherit;color:inherit}
 #sideX:hover{color:var(--tx)}
 
 /* ---------- floating controls ---------- */
-#zoombar{position:fixed;left:12px;bottom:12px;z-index:37;display:flex;align-items:center;gap:6px;
-  background:#0b0e13d9;border:1px solid var(--line);border-radius:8px;padding:6px;
-  backdrop-filter:blur(8px)}
-#zoomlbl{font-size:11px;color:var(--tx2);width:40px;text-align:center;
-  font-variant-numeric:tabular-nums}
 #mini{position:fixed;right:12px;bottom:12px;z-index:37;border:1px solid var(--line2);
   border-radius:8px;background:#0b0e13d9;backdrop-filter:blur(8px);cursor:crosshair}
 #mini.shift{right:412px}
@@ -326,18 +328,11 @@ button,select,input{font:inherit;color:inherit}
     <div class="sk" id="sk"></div>
     <div class="ss" id="ss"></div>
     <div class="spills" id="spills"></div>
+    <div id="sideMsg"></div>
     <div class="row" id="srow"></div>
   </header>
   <div class="list" id="slist"></div>
 </aside>
-
-<div id="zoombar">
-  <button class="btn icon" id="zo">&minus;</button>
-  <span id="zoomlbl">0%</span>
-  <button class="btn icon" id="zi">+</button>
-  <button class="btn" id="fit">Fit</button>
-  <button class="btn" id="hundred">100%</button>
-</div>
 
 <canvas id="mini" width="230" height="150"></canvas>
 
@@ -1072,7 +1067,6 @@ function setLod(){
 function apply(){
   world.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.s+')';
   setLod();
-  $('#zoomlbl').textContent = Math.round(view.s/SREAD*100) + '%';
   if (!railPending){
     railPending = true;
     requestAnimationFrame(() => { railPending = false; placeRails(); });
@@ -1171,9 +1165,9 @@ function select(key){
   $('#sk').innerHTML = '<a href="'+DATA.baseUrl+'/browse/'+i.key+'" target="_blank">'+esc(i.key)
     + '</a>';
   $('#ss').textContent = i.summary;
-  $('#spills').innerHTML = typeIcon(i.type, 15)
-    + pill(i.priority, PRIOC[i.priority] || PRIOC.None)
-    + pill(i.status, CATC[i.cat]);
+  $('#spills').innerHTML = typeIcon(i.type, 15) + editors(i);
+  for (const el of $('#spills').querySelectorAll('select')) el.dataset.was = el.value;
+  $('#sideMsg').textContent = ''; $('#sideMsg').className = '';
   $('#srow').innerHTML =
       (i.column === i.status ? '' : '<span>column <b>'+esc(i.column)+'</b></span>')
     + (i.epic ? '<span>epic <b data-epic="'+esc(i.epic)+'" style="cursor:pointer">'
@@ -1234,6 +1228,63 @@ function select(key){
   $('#side').classList.add('open');
   $('#mini').classList.add('shift');
 }
+/** The two things this board can change in Jira. The workflow here is permissive, so every
+ *  status is reachable from every other one and the same transition list applies to all. */
+function editors(i){
+  const prios = (DATA.priorityList || []).map(p => p.name);
+  const opt = (v, cur) => '<option value="'+esc(v)+'"'+(v === cur ? ' selected' : '')+'>'
+    + esc(v) + '</option>';
+  const trans = DATA.transitions || [];
+  const known = trans.some(t => t.to === i.status);
+  return '<select id="edPrio" title="Priority">'
+      + (prios.includes(i.priority) ? '' : opt(i.priority, i.priority))
+      + prios.map(v => opt(v, i.priority)).join('') + '</select>'
+    + '<select id="edStatus" title="Status">'
+      + (known ? '' : opt(i.status, i.status))
+      + trans.map(t => '<option value="'+esc(t.id)+'"'
+          + (t.to === i.status ? ' selected' : '')+'>'+esc(t.to)+'</option>').join('')
+      + '</select>';
+}
+
+async function writeIssue(key, body, revert){
+  const msg = $('#sideMsg');
+  for (const el of document.querySelectorAll('#spills select')) el.disabled = true;
+  msg.className = 'busy'; msg.textContent = 'saving to Jira';
+  try{
+    const r = await fetch('/api/issue/' + encodeURIComponent(key), {
+      method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(body)});
+    const patch = await r.json();
+    if (patch.error) throw new Error(patch.error);
+
+    const issue = DATA.issues.find(x => x.key === key);
+    for (const [k, v] of Object.entries(patch)) if (k !== 'onBoard') issue[k] = v;
+
+    if (patch.onBoard === false){
+      DATA.issues = DATA.issues.filter(x => x.key !== key);
+      sel = null;
+      relayout(false);
+      $('#side').classList.remove('open'); $('#mini').classList.remove('shift');
+      return;
+    }
+    relayout(false);           // the card moves to its new column and swimlane
+    select(key);               // and the panel stays on it, now showing the new values
+  }catch(e){
+    msg.className = 'bad';
+    msg.textContent = String(e.message || e);
+    if (revert) revert();
+    for (const el of document.querySelectorAll('#spills select')) el.disabled = false;
+  }
+}
+
+$('#spills').addEventListener('change', e => {
+  if (!sel) return;
+  const was = e.target.dataset.was;
+  const back = () => { e.target.value = was; };
+  e.target.dataset.was = e.target.value;
+  if (e.target.id === 'edPrio') writeIssue(sel, {priority: e.target.value}, back);
+  if (e.target.id === 'edStatus') writeIssue(sel, {transition: e.target.value}, back);
+});
+
 $('#sideX').onclick = () => select(null);
 $('#side').addEventListener('click', e => {
   const p = e.target.closest('[data-person]');
@@ -1299,10 +1350,6 @@ $('#q').addEventListener('keydown', e => {
 });
 
 /* ===================== controls ===================== */
-$('#zi').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 1.4);
-$('#zo').onclick = () => zoomAt(innerWidth/2, innerHeight/2, 1/1.4);
-$('#fit').onclick = () => relayout(true);
-$('#hundred').onclick = () => zoomAt(innerWidth/2, innerHeight/2, SREAD/view.s);
 $('#reload').onclick = () => load(true);
 
 document.addEventListener('keydown', e => {
