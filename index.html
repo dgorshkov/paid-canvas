@@ -353,6 +353,8 @@ const GROUP_GAP = 560;                              // between the three bands o
 const SWIM_HEAD = 136, SWIM_GAP = 60, SWIM_MIN = 190;
 const RAIL_H = 36;                                  // screen px, column-name rail
 const MAX_SUBCOLS = 3;                              // how wide one board column may grow
+const MAX_SUBCOLS_DONE = 10;                        // Delivered is an archive, let it spread
+const subcolCap = name => name === 'Delivered' ? MAX_SUBCOLS_DONE : MAX_SUBCOLS;
 
 // card interior
 const PAD = 24, KEY_ROW = 48, SUM_LH = 50, SUM_CPL = 32;
@@ -726,7 +728,7 @@ function chooseWidths(colNames, keys, cell, vw, vh){
         const arr = cell.get(g + ' ' + c);
         if (arr) m = Math.max(m, Math.ceil(arr.content / T));
       }
-      return Math.max(1, Math.min(MAX_SUBCOLS, m));
+      return Math.max(1, Math.min(subcolCap(c), m));
     });
     const W = n.reduce((a,x) => a + colWidth(x), 0)
       + colNames.reduce((a,_,idx) => a + (idx < colNames.length-1 ? gapAfter(colNames, idx) : 0), 0);
