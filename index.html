@@ -81,8 +81,6 @@ button,select,input{font:inherit;color:inherit}
   text-transform:none;letter-spacing:0}
 .qc.on .c{color:var(--focus)}
 .qc .av{width:18px;height:18px;font-size:8px}
-.qc.none{border-style:dashed;color:var(--tx3)}
-.qc.none.on{border-style:solid}
 
 /* ---------- canvas ---------- */
 #stage{position:fixed;inset:0;overflow:hidden;
@@ -385,7 +383,7 @@ const ROLE = {a:'assignee', r:'reporter', x:'created it', c:'commented', k:'link
 // filter. The detail panel still lists every role.
 const FILTER_ROLES = 'ack';
 // Plain ASCII: a NUL in an HTML attribute is replaced by the parser and never round-trips.
-const NO_ONE = '__unassigned__', NO_CRAFT = '__nocraft__';
+const NO_ONE = '__unassigned__';
 const MRC = {opened:'#39c5cf', draft:'#6b7887', merged:'#a371f7', closed:'#f85149',
              locked:'#f0883e', other:'#4b5a6e'};
 const MR_ORDER = ['opened','draft','merged','closed','other'];
@@ -577,7 +575,7 @@ function visible(i){
 
 function dropStaleFocus(){
   if (!F.focus) return;
-  const ok = F.focus.id === NO_ONE || F.focus.id === NO_CRAFT ? true
+  const ok = F.focus.id === NO_ONE ? true
     : F.focus.kind === 'person' ? DATA.people.some(p => p.id === F.focus.id)
     : F.focus.kind === 'craft' ? !!(DATA.specialties || {})[F.focus.id]
     : !!DATA.epics[F.focus.id];
@@ -603,7 +601,6 @@ function craftsOf(i){
 }
 function craftPeople(i){
   if (!F.focus || F.focus.kind !== 'craft') return [];
-  if (F.focus.id === NO_CRAFT) return [];
   const ids = (DATA.specialties || {})[F.focus.id] || [];
   const out = [];
   const add = p => { if (p && ids.includes(p.id) && !out.some(x => x.id === p.id)) out.push(p); };
@@ -614,14 +611,12 @@ function craftPeople(i){
 function matchesFocus(i){
   if (!F.focus) return true;
   if (F.focus.kind === 'person') return !!focusRoles(i);
-  if (F.focus.kind === 'craft')
-    return F.focus.id === NO_CRAFT ? craftsOf(i).length === 0 : craftPeople(i).length > 0;
+  if (F.focus.kind === 'craft') return craftPeople(i).length > 0;
   return i.epic === F.focus.id;
 }
 function roleText(i){
   if (F.focus && F.focus.kind === 'craft')
-    return F.focus.id === NO_CRAFT ? 'no craft'
-      : craftPeople(i).map(p => p.name.split(' ')[0]).join(', ');
+    return craftPeople(i).map(p => p.name.split(' ')[0]).join(', ');
   if (F.focus && F.focus.id === NO_ONE) return 'unassigned';
   const r = focusRoles(i);
   return r ? [...r].map(c => ROLE[c]).filter(Boolean).join(', ') : '';
@@ -957,11 +952,9 @@ function buildQuickFilter(){
   const crafts = DATA.specialties || {};
   const craftCount = {};
   for (const k of Object.keys(crafts)) craftCount[k] = 0;
-  let noCraft = 0, noOne = 0;
+  let noOne = 0;
   for (const c of CARDS){
-    const mine = craftsOf(c.i);
-    if (mine.length) for (const k of mine) craftCount[k]++;
-    else noCraft++;
+    for (const k of craftsOf(c.i)) craftCount[k]++;
     if (!c.i.assignee) noOne++;
   }
 
@@ -976,20 +969,18 @@ function buildQuickFilter(){
     return '<button class="qp" data-kind="person" data-id="'+esc(id)+'" style="background:'
       + avColor(id)+'" title="'+esc(p.name)+' - '+n+' items">'+esc(p.initials)+'</button>';
   }).join('');
-  const craftChip = (k, label, count, extra) =>
-    '<button class="qc'+(extra||'')+'" data-kind="craft" data-id="'+esc(k)+'" title="'
-    + esc(k === NO_CRAFT ? 'Nobody from a craft group is on these'
-                         : crafts[k].map(personName).join(', '))+'">'
-    + (crafts[k] ? crafts[k].map(id => '<i class="av" style="background:'+avColor(id)+'">'
-        + esc((DATA.people.find(p => p.id === id) || {}).initials || '?')+'</i>').join('') : '')
-    + esc(label) + '<span class="c">'+count+'</span></button>';
+  const craftChip = k =>
+    '<button class="qc" data-kind="craft" data-id="'+esc(k)+'" title="'
+    + esc(crafts[k].map(personName).join(', '))+'">'
+    + crafts[k].map(id => '<i class="av" style="background:'+avColor(id)+'">'
+        + esc((DATA.people.find(p => p.id === id) || {}).initials || '?')+'</i>').join('')
+    + esc(k) + '<span class="c">'+craftCount[k]+'</span></button>';
 
   $('#qfWho').innerHTML = '<span class="qlab">People</span>' + avatars
     + '<button class="qp none" data-kind="person" data-id="'+esc(NO_ONE)
     + '" title="Nobody is assigned - '+noOne+' items">\u2013</button>'
     + '<i class="qsep"></i>'
-    + Object.keys(crafts).map(k => craftChip(k, k, craftCount[k])).join('')
-    + craftChip(NO_CRAFT, 'unknown', noCraft, ' none');
+    + Object.keys(crafts).map(craftChip).join('');
 
   $('#qfEpics').innerHTML = '<span class="qlab">Epics</span>' + epics.map(([key, n]) =>
     '<button class="qe" data-kind="epic" data-id="'+esc(key)+'" title="'+esc(key)+' '
@@ -1008,7 +999,6 @@ function syncQuickFilter(){
   b.classList.toggle('show', !!F.focus);
   if (!F.focus) return;
   const label = F.focus.id === NO_ONE && F.focus.kind === 'person' ? 'unassigned'
-    : F.focus.id === NO_CRAFT && F.focus.kind === 'craft' ? 'no craft'
     : F.focus.kind === 'person' ? personName(F.focus.id)
     : F.focus.kind === 'craft' ? F.focus.id
     : epicName(F.focus.id);

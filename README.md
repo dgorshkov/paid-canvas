@@ -114,10 +114,8 @@ tickets, does that kind of work. A PAID story often waits unassigned while its B
 already taken, which is why linked tickets count. Each matching card names the person who
 matched.
 
-Two chips catch what the others miss. The dashed circle at the end of the avatars highlights
-everything with no assignee — 73 cards, 54 of them in Ready. The dashed **unknown** pill
-highlights everything no craft group touches, on the card or on any linked ticket — 69 cards,
-46 in Ready. Those two are how you find the work nobody has picked up or classified.
+The dashed circle at the end of the avatars highlights everything with no assignee at all —
+73 cards, 54 of them in Ready.
 
 `specialties.json` holds the mapping. It ships with the repo:
 
