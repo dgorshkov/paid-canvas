@@ -668,14 +668,19 @@ function gapAfter(names, idx){
 
 /** Remember which card sits under the viewport centre, and where, so a re-layout can
  *  put the same work back under the eye even though every coordinate has moved. */
-function anchorSnapshot(){
+/** Passed instead of a key when the camera should simply stay where it is: after an edit the
+ *  board reflows around the moved card, and holding any one card still would shift the rest. */
+const HOLD_CAMERA = Symbol('hold');
+
+function anchorSnapshot(skipKey){
   if (!CARDS.length) return null;
   const {w,h} = vp();
   const cx = (w/2 - view.x)/view.s, cy = (h/2 - view.y)/view.s;
-  let best = sel ? CARDS.find(c => c.i.key === sel) : null;
+  let best = (sel && sel !== skipKey) ? CARDS.find(c => c.i.key === sel) : null;
   if (!best){
     let bd = Infinity;
     for (const c of CARDS){
+      if (c.i.key === skipKey) continue;
       const dx = c.x + c.w/2 - cx, dy = c.y + c.h/2 - cy;
       const d = dx*dx + dy*dy;
       if (d < bd){ bd = d; best = c; }
@@ -746,8 +751,8 @@ function chooseWidths(colNames, keys, cell, vw, vh){
   return best.n;
 }
 
-var relayout = function(refit){
-  const anchor = refit ? null : anchorSnapshot();
+var relayout = function(refit, skipKey){
+  const anchor = (refit || skipKey === HOLD_CAMERA) ? null : anchorSnapshot(skipKey);
   const colNames = DATA.columns.map(c => c.name);
   const vis = DATA.issues.filter(visible);
 
@@ -1262,11 +1267,11 @@ async function writeIssue(key, body, revert){
     if (patch.onBoard === false){
       DATA.issues = DATA.issues.filter(x => x.key !== key);
       sel = null;
-      relayout(false);
+      relayout(false, HOLD_CAMERA);
       $('#side').classList.remove('open'); $('#mini').classList.remove('shift');
       return;
     }
-    relayout(false);           // the card moves to its new column and swimlane
+    relayout(false, HOLD_CAMERA);   // the card moves; the camera does not
     select(key);               // and the panel stays on it, now showing the new values
   }catch(e){
     msg.className = 'bad';

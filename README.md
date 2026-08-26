@@ -200,7 +200,8 @@ workflow on this project is permissive, so every status is reachable from every 
 the same twelve transitions apply to every ticket.
 
 On success the board re-reads that one issue from Jira and moves the card to its new column and
-swimlane, keeping it selected and keeping your zoom and position. The days-in-status clock
+swimlane. The card stays selected and the camera does not move: an edit reflows the board, and
+holding any one card still would shift everything else instead. The days-in-status clock
 resets, because Jira reset it. Moving a ticket to Discarded takes it off the board, since no
 column maps to that status.
 
