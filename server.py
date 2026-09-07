@@ -496,7 +496,9 @@ def build(jira):
                 if epic_key not in epics:
                     ps, pc = status_of(pf)
                     epics[epic_key] = {"key": epic_key, "summary": pf.get("summary") or "",
-                                       "status": ps, "cat": pc}
+                                       "status": ps, "cat": pc,
+                                       "priority": (pf.get("priority") or {}).get("name")
+                                       or "None"}
 
         kids = []
         seen = set()

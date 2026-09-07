@@ -962,8 +962,14 @@ function buildQuickFilter(){
     if (!c.i.assignee) noOne++;
   }
 
-  const byCount = name => (a,b) => b[1] - a[1] || name(a[0]).localeCompare(name(b[0]));
-  const epics = [...ec.entries()].sort(byCount(epicName));
+  // epics run in priority order, then by how many items they touch
+  const epicPrio = key => (DATA.epics[key] || {}).priority || 'None';
+  const prioRank = key => {
+    const r = DATA.priorities.indexOf(epicPrio(key));
+    return r < 0 ? DATA.priorities.length : r;
+  };
+  const epics = [...ec.entries()].sort((a,b) => prioRank(a[0]) - prioRank(b[0])
+    || b[1] - a[1] || epicName(a[0]).localeCompare(epicName(b[0])));
   // the squad, always all of it, always in the same place: by last name
   const people = DATA.people.filter(p => p.team)
     .sort((a,b) => lastName(a.name).localeCompare(lastName(b.name))
@@ -989,7 +995,8 @@ function buildQuickFilter(){
 
   $('#qfEpics').innerHTML = '<span class="qlab">Epics</span>' + epics.map(([key, n]) =>
     '<button class="qe" data-kind="epic" data-id="'+esc(key)+'" title="'+esc(key)+' '
-    + esc(epicName(key))+' - '+n+' items"><i></i><b class="ek">'+esc(key)+'</b>'
+    + esc(epicName(key))+' - '+esc(epicPrio(key))+' priority, '+n
+    + ' items"><i></i><b class="ek">'+esc(key)+'</b>'
     + '<span class="t">'+esc(epicName(key))
     + '</span><span class="c">'+n+'</span></button>').join('');
 
