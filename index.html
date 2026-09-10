@@ -87,8 +87,7 @@ button,select,input{font:inherit;color:inherit}
   background-image:radial-gradient(circle at 1px 1px,#1d232d 1px,transparent 0);
   background-size:30px 30px}
 #stage.grab{cursor:grabbing}
-#world{position:absolute;top:0;left:0;transform-origin:0 0}
-#world.moving{will-change:transform}
+#world{position:absolute;top:0;left:0;transform-origin:0 0;will-change:transform}
 
 /* column bands and swimlanes */
 .colband{position:absolute;top:0;background:#12171e;border:3px solid var(--line2);
@@ -105,7 +104,7 @@ button,select,input{font:inherit;color:inherit}
 
 /* ---------- card ---------- */
 .card{position:absolute;background:var(--panel);border:2px solid var(--line);border-radius:18px;
-  overflow:hidden;cursor:pointer;border-color:var(--ac,var(--line))}
+  overflow:hidden;cursor:pointer;border-color:var(--ac,var(--line));content-visibility:auto}
 .card:hover{border-color:var(--ah,#4b5a6e)}
 .card.sel{border-color:var(--accent);box-shadow:0 0 0 8px #58a6ff2b}
 .card.dim{opacity:.12}
@@ -167,7 +166,7 @@ button,select,input{font:inherit;color:inherit}
 
 /* ---------- linked chip ---------- */
 .kid{position:absolute;border-radius:12px;border:2px solid var(--line2);background:var(--panel2);
-  overflow:hidden;padding:12px 14px}
+  overflow:hidden;padding:12px 14px;content-visibility:auto}
 .kid.rel{border-style:dashed}
 .kid .kk{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:28px;font-weight:700;
   line-height:1;display:flex;align-items:center;gap:10px;height:34px;color:var(--tx2)}
@@ -1117,13 +1116,12 @@ function placeRails(){
 }
 
 /* ===================== view transform ===================== */
-let moving = false, movingT = 0, railPending = false;
-let lod = 0;
+let movingT = 0, railPending = false;
+let lod = -1;
 function setLod(){
   let n = 0;
   while (n < LOD.length && view.s >= LOD[n]*(lod <= n ? LOD_HYST : 1/LOD_HYST)) n++;
-  const cls = 'lod' + n + (moving ? ' moving' : '');
-  if (cls !== world.className){ lod = n; world.className = cls; }
+  if (n !== lod){ lod = n; world.className = 'lod' + n; }
 }
 function apply(){
   world.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.s+')';
@@ -1163,12 +1161,11 @@ function centerOn(c, s){
   view.y = h/2 - (c.y + c.h/2)*view.s;
   clampView(); apply(); drawMini();
 }
-function beginMove(){ moving = true; world.classList.add('moving'); clearTimeout(movingT); }
+/* The minimap waits for the gesture to stop rather than redrawing under every event. */
+function beginMove(){ clearTimeout(movingT); }
 function endMove(){
   clearTimeout(movingT);
-  movingT = setTimeout(() => {
-    moving = false; world.classList.remove('moving'); drawMini();
-  }, 130);
+  movingT = setTimeout(drawMini, 130);
 }
 
 stage.addEventListener('wheel', e => {
