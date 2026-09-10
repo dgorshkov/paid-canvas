@@ -173,7 +173,8 @@ The endpoint needs the integration's own instance key as `applicationType`; the 
 
 A card's box is the same size at every zoom. It reserves room for everything it can ever show,
 so zooming never resizes anything or bumps a neighbour. There are two states, with the boundary
-at 60%:
+at 60% — 64% going up and 57% coming down, so a pinch that lands on it holds the state it is
+in rather than swapping every card several times a second:
 
 | Zoom | What a card carries |
 |---|---|

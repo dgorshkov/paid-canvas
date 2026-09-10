@@ -377,6 +377,10 @@ const BIG_F = 48, BIG_LH = 1.06;                    // one title size on every c
 // Two states, one boundary at 60% of reading size: the title alone, or everything the card has.
 // The geometry always reserves room for everything, so crossing this never moves a box.
 const LOD = [0.252];
+// The boundary sits 6% higher going up than it does coming down. A pinch holds its scale to
+// within a few percent, so without the gap a gesture that lands on the boundary crosses it
+// several times a second and every card swaps everything it draws each time.
+const LOD_HYST = 1.06;
 const SREAD = 0.42;                                 // world scale where a card reads naturally
 
 const CATC = {new:'#7d8da3', indeterminate:'#e3a008', done:'#3fb950'};
@@ -1113,10 +1117,12 @@ function placeRails(){
 
 /* ===================== view transform ===================== */
 let moving = false, movingT = 0, railPending = false;
+let lod = 0;
 function setLod(){
   let n = 0;
-  while (n < LOD.length && view.s >= LOD[n]) n++;
-  world.className = 'lod' + n + (moving ? ' moving' : '');
+  while (n < LOD.length && view.s >= LOD[n]*(lod <= n ? LOD_HYST : 1/LOD_HYST)) n++;
+  const cls = 'lod' + n + (moving ? ' moving' : '');
+  if (cls !== world.className){ lod = n; world.className = cls; }
 }
 function apply(){
   world.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.s+')';
