@@ -374,9 +374,10 @@ const AV_ROW = 72;                                  // matches the lod0 .krow he
 const BIG_TOP = PAD + AV_ROW + 14;                  // under the far-zoom avatar row
 const BIG_F = 48, BIG_LH = 1.06;                    // one title size on every card
 
-// Two states, one boundary at 60% of reading size: the title alone, or everything the card has.
-// The geometry always reserves room for everything, so crossing this never moves a box.
-const LOD = [0.252];
+// Where a card drops to the title alone, as a world scale. At 0 nothing is ever below it, so
+// every card draws everything at every zoom; 0.252, 60% of reading size, is the far-zoom state
+// the CSS and the .big and .bars markup are still there for.
+const LOD = [0];
 // The boundary sits 6% higher going up than it does coming down. A pinch holds its scale to
 // within a few percent, so without the gap a gesture that lands on the boundary crosses it
 // several times a second and every card swaps everything it draws each time.

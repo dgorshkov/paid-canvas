@@ -29,7 +29,8 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
   `POST /api/issue/<KEY>` which sets a priority or runs a transition, then reads the issue
   back and returns what the board needs to move the card.
 - `index.html` — the whole client, one file. Canvas layout in world coordinates, pan and zoom
-  by CSS transform, two detail levels.
+  by CSS transform. Every card draws everything it has at every zoom; `LOD` holds the scale
+  below which it would drop to the title alone, and at `[0]` that never happens.
 - `README.md` — what the board shows and every setting.
 
 ## Rules

@@ -84,9 +84,8 @@ A card carries the story key, title, assignee avatar, type, priority and status,
 per linked work item. Titles are never clipped: the card is laid out around the full text.
 Assignees are avatars only, with the name on hover.
 
-Colour is carried by pills alone — type, priority and status — by the status pill on each
-chip, and far out by the bar that stands in for the chips. Cards and chips have no coloured
-edges or backgrounds. Every status pill uses the Jira status category: grey for to-do, amber
+Colour is carried by pills alone — type, priority and status — and by the status pill on each
+chip. Cards and chips have no coloured edges or backgrounds. Every status pill uses the Jira status category: grey for to-do, amber
 for in progress, green for done. Merge-request colours
 sit apart from that scale: cyan open, grey draft, purple merged, red closed.
 
@@ -171,29 +170,19 @@ The endpoint needs the integration's own instance key as `applicationType`; the 
 
 ## Zoom levels
 
-A card's box is the same size at every zoom. It reserves room for everything it can ever show,
-so zooming never resizes anything or bumps a neighbour. There are two states, with the boundary
-at 60% — 64% going up and 57% coming down, so a pinch that lands on it holds the state it is
-in rather than swapping every card several times a second:
-
-| Zoom | What a card carries |
-|---|---|
-| under 60% | the title, the work-type icon, the assignee, and one bar along the bottom edge with a segment per chip in its status colour |
-| 60% and up | title, work-type icon, priority, status, dates, epic, chips with their own titles and status, and every linked merge request inside its chip |
-
-Far out, the title is written across everything the card holds at reading size: its pills, its
-dates and the whole chip stack, which collapses into that bar. Every card writes it at one
-size, so the board reads as one page of titles rather than a mix of headlines. A card is tall
-because its title is long or it carries a lot of linked work, so the room grows with what has
-to go into it; a title longer than its card can hold ends in an ellipsis.
+Every card draws everything it has at every zoom: title, work-type icon, priority, status,
+dates, epic, and one chip per linked work item with its own title, status and merge requests.
+A card's box reserves room for all of it, so zooming never resizes anything or bumps a
+neighbour.
 
 Columns are separated by a wide gap, so two columns that both run three cards wide still read
 as two columns. They sit in three bands with a wider gap and a divider between them: everything
 before Implementation, everything in flight, and Delivered.
 
-Reserving that room makes the board 25,814 world px tall, so **Fit** lands at 5% where the
-titles are too small to read. Around 25% they are legible with about a swimlane on screen. The
-chips are what drive that height — they carry full titles and up to four merge-request rows each.
+Reserving that room makes the board around 16,500 world px tall, so **Fit** lands near 4%,
+where only the column names read. Around 25% a story title is legible with about a swimlane on
+screen, and the chips under it are colour rather than text. The chips are what drive that
+height: they carry full titles and up to four merge-request rows each.
 
 ## Controls
 
