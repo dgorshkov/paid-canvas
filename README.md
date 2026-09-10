@@ -84,9 +84,10 @@ A card carries the story key, title, assignee avatar, type, priority and status,
 per linked work item. Titles are never clipped: the card is laid out around the full text.
 Assignees are avatars only, with the name on hover.
 
-Colour is carried by pills alone — type, priority and status — and by the status pill on each
-chip. Cards and chips have no coloured edges or backgrounds. Every status pill uses the Jira
-status category: grey for to-do, amber for in progress, green for done. Merge-request colours
+Colour is carried by pills alone — type, priority and status — by the status pill on each
+chip, and far out by the bar that stands in for the chips. Cards and chips have no coloured
+edges or backgrounds. Every status pill uses the Jira status category: grey for to-do, amber
+for in progress, green for done. Merge-request colours
 sit apart from that scale: cyan open, grey draft, purple merged, red closed.
 
 Chips cover the five projects that carry implementation: ANDR, IOS, DEV, BACK and LOC.
@@ -176,15 +177,21 @@ at 60%:
 
 | Zoom | What a card carries |
 |---|---|
-| under 60% | the key alone, chips as status bars |
+| under 60% | the title, the work-type icon, the assignee, and one bar along the bottom edge with a segment per chip in its status colour |
 | 60% and up | title, work-type icon, priority, status, dates, epic, chips with their own titles and status, and every linked merge request inside its chip |
+
+Far out, the title is written across everything the card holds at reading size: its pills, its
+dates and the whole chip stack, which collapses into that bar. Every card writes it at one
+size, so the board reads as one page of titles rather than a mix of headlines. A card is tall
+because its title is long or it carries a lot of linked work, so the room grows with what has
+to go into it; a title longer than its card can hold ends in an ellipsis.
 
 Columns are separated by a wide gap, so two columns that both run three cards wide still read
 as two columns. They sit in three bands with a wider gap and a divider between them: everything
 before Implementation, everything in flight, and Delivered.
 
-Reserving that room makes the board 25,814 world px tall, so **Fit** lands at 5% where the keys
-are too small to read. Around 30% the keys are legible with about a swimlane on screen. The
+Reserving that room makes the board 25,814 world px tall, so **Fit** lands at 5% where the
+titles are too small to read. Around 25% they are legible with about a swimlane on screen. The
 chips are what drive that height — they carry full titles and up to four merge-request rows each.
 
 ## Controls

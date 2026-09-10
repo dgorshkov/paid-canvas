@@ -132,9 +132,17 @@ button,select,input{font:inherit;color:inherit}
     radial-gradient(2.0px 2.0px at 96% 84%, #d6cbb47a, transparent 62%)}
 .card .web{position:absolute;pointer-events:none;opacity:0;overflow:visible}
 .card .web path,.card .web line{fill:none;stroke:#cfd8e3;vector-effect:non-scaling-stroke}
-.card .big{position:absolute;left:24px;right:24px;display:none;align-items:flex-start;
-  font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:124px;font-weight:700;
-  letter-spacing:-.04em;line-height:1;color:#c9d5e2;white-space:nowrap;pointer-events:none}
+/* far zoom: the title, centred in every part of the card that its pills, dates and chips
+   hold at reading size. Its chips become one bar along the bottom edge, a segment each. */
+.card .big{position:absolute;left:24px;right:24px;display:none;align-items:center;
+  overflow:hidden;font-size:48px;font-weight:700;letter-spacing:-.01em;line-height:1.06;
+  color:#cbd7e4;pointer-events:none}
+.card .big span{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;width:100%;
+  overflow-wrap:anywhere}
+.card .bars{position:absolute;left:24px;right:24px;display:none;gap:10px;pointer-events:none}
+.card .bars i{flex:1;min-width:0;border-radius:10px}
+.card .bars i.rel{opacity:.4}
+.card.ghost .big i{display:block;border-radius:8px;background:#222b36}
 .krow{display:flex;align-items:center;gap:12px;height:48px}
 .tico{flex:none;display:block}
 #side .spills{align-items:center}
@@ -176,19 +184,19 @@ button,select,input{font:inherit;color:inherit}
 .kid.dim{opacity:.12}
 .kid.hit{border-color:var(--focus);border-style:solid}
 
-/* ---------- level of detail: 0 the key alone, 1 everything ---------- */
+/* ---------- level of detail: 0 the title alone, 1 everything ---------- */
 #world.lod0 .swimHd .sl{font-size:96px}
 #world.lod0 .swimHd .sd{width:40px;height:40px}
 #world.lod0 .swimHd .sc{font-size:72px}
 #world.lod0 .sum,#world.lod0 .pills,#world.lod0 .meta,#world.lod0 .chd{display:none}
 #world.lod0 .krow .k,#world.lod0 .krow .mrpips{display:none}
-#world.lod0 .krow{height:48px}
-#world.lod0 .krow .av{width:88px;height:88px;font-size:42px}
+#world.lod0 .krow{height:72px}
+#world.lod0 .krow .av{width:72px;height:72px;font-size:34px}
 #world.lod0 .card .big{display:flex}
-#world.lod0 .kid{padding:0;border-width:0;border-radius:8px}
-#world.lod0 .kid .kk,#world.lod0 .kid .ks,#world.lod0 .kid .mrs{display:none}
-#world.lod0 .kid .kp{margin:0;height:100%}
-#world.lod0 .kid .kp .pill{width:100%;height:100%;border-radius:8px;color:transparent}
+#world.lod0 .card.ghost .big{display:flex;flex-direction:column;justify-content:center}
+#world.lod0 .card.ghost .body>.gline{display:none}
+#world.lod0 .card .bars{display:flex}
+#world.lod0 .kid{display:none}
 
 #world.lod1 .swimHd .sl{font-size:54px}
 #world.lod1 .swimHd .sd{width:24px;height:24px}
@@ -360,7 +368,13 @@ const CHIP_W = CARD_W - PAD * 2, CHIP_GAP = 16, CHIP_PAD = 12;
 const CHIP_KEY = 34, CHIP_LH = 34, CHIP_CPL = 47, CHIP_PILL = 34, CHIP_MR = 34, MR_MAX = 3;
 const CHIP_MIN = 66;                                // compact chip: one row, key and status
 
-// Two states, one boundary at 60% of reading size: the key alone, or everything the card has.
+// far zoom: the title takes the whole card interior and the chips become one bar
+const BAR_H = 44, BAR_GAP = 16;                     // the bar, and its gap above
+const AV_ROW = 72;                                  // matches the lod0 .krow height in CSS
+const BIG_TOP = PAD + AV_ROW + 14;                  // under the far-zoom avatar row
+const BIG_F = 48, BIG_LH = 1.06;                    // one title size on every card
+
+// Two states, one boundary at 60% of reading size: the title alone, or everything the card has.
 // The geometry always reserves room for everything, so crossing this never moves a box.
 const LOD = [0.252];
 const SREAD = 0.42;                                 // world scale where a card reads naturally
@@ -650,7 +664,24 @@ function cardMetrics(i, kids){
   const kidsH = chips.length
     ? 22 + CHD_ROW + chips.reduce((a,c) => a + c.h, 0) + (chips.length-1)*CHIP_GAP
     : 0;
-  return {h: head + kidsH + PAD, headH: head, lines: ln, chips};
+  return {h: head + kidsH + PAD, lines: ln, chips};
+}
+
+/* Every card writes its far-zoom title at one size, so the board reads as one page of titles
+   rather than a mix of headlines. A card is tall because its title is long or it carries
+   linked work, so the room grows with what has to go into it, and 48px holds all but a
+   handful of titles whole. Those are clamped with an ellipsis. */
+function bigTitle(c){
+  const h = Math.max(BIG_F*BIG_LH,
+    c.h - BIG_TOP - PAD - (c.kids.length ? BAR_H + BAR_GAP : 0));
+  return {h, n: Math.max(1, Math.floor(h/(BIG_F*BIG_LH)))};
+}
+function chipBars(kids, fill){
+  if (!kids.length) return '';
+  return '<div class="bars" style="bottom:'+PAD+'px;height:'+BAR_H+'px">'
+    + kids.map(k => '<i class="'+(k.impl ? '' : 'rel')+'" style="background:'
+        + fill(k)+'"></i>').join('')
+    + '</div>';
 }
 
 /* ===================== layout ===================== */
@@ -846,13 +877,14 @@ function render(){
     const i = c.i;
     if (GHOST || i.ghost){ out.push(ghostCard(c)); continue; }
     const role = roleText(i);
+    const big = bigTitle(c);
     const ac = i.assignee
       ? ';--ac:'+avColor(i.assignee.id, '.62')+';--ah:'+avColor(i.assignee.id) : '';
     out.push('<div class="card" data-k="'+i.key+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'
       + c.w+'px;height:'+c.h+'px'+ac+'">'
       + ageLayers(i, c.w, c.h)
-      + '<div class="big" style="top:'+(PAD+KEY_ROW)+'px;height:'
-      + (c.headH - PAD*2 - KEY_ROW)+'px">'+esc(i.key)+'</div>'
+      + '<div class="big" style="top:'+BIG_TOP+'px;height:'+big.h+'px"><span style='
+      + '"-webkit-line-clamp:'+big.n+'">'+esc(i.summary)+'</span></div>'
       + '<div class="body">'
       + '<div class="krow">'+typeIcon(i.type, 40)+'<span class="k">'+esc(i.key)+'</span>'
       + '<span class="sp"></span>' + mrPips(c.mr) + avatar(i.assignee) + '</div>'
@@ -869,7 +901,9 @@ function render(){
       + (i.due ? '<span class="lb">due '+esc(i.due)+'</span>' : '')
       + '</div>'
       + (c.kids.length ? '<div class="chd">'+c.kids.length+' linked</div>' : '')
-      + '</div></div>');
+      + '</div>'
+      + chipBars(c.kids, k => CATC[k.cat] || CATC.new)
+      + '</div>');
 
     if (c.kids.length){
       let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0)
@@ -911,10 +945,13 @@ function render(){
 
 function ghostCard(c){
   const w = n => 'width:' + n + '%';
+  const big = bigTitle(c);
+  const bar = 'height:' + Math.round(BIG_F*.72) + 'px';
   let out = '<div class="card ghost" style="left:'+c.x+'px;top:'+c.y+'px;width:'+c.w
     + 'px;height:'+c.h+'px"><i class="sh" style="animation-delay:'
     + ((c.i.key.length + Math.round(c.y)) % 900 / 1000).toFixed(2) + 's"></i>'
-    + '<div class="big" style="top:'+(PAD+KEY_ROW)+'px">PAID-000</div>'
+    + '<div class="big" style="top:'+BIG_TOP+'px;height:'+big.h+'px"><i style="'+bar
+    + '"></i><i style="'+bar+';margin-top:'+Math.round(BIG_F*.34)+'px;'+w(64)+'"></i></div>'
     + '<div class="body">'
     + '<div class="krow"><i class="gico"></i><span class="k">PAID-000</span>'
     + '<span class="sp"></span><i class="gav"></i></div>';
@@ -924,7 +961,9 @@ function ghostCard(c){
   out += '<div class="pills"><i class="gpill"></i><i class="gpill" style="width:150px"></i></div>'
     + '<div class="meta"><i class="gline s" style="width:38%"></i></div>'
     + (c.kids.length ? '<div class="chd"><i class="gline s" style="width:22%"></i></div>' : '')
-    + '</div></div>';
+    + '</div>'
+    + chipBars(c.kids, () => '#222b36')
+    + '</div>';
 
   if (c.kids.length){
     let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0) + (c.chips.length-1)*CHIP_GAP);
