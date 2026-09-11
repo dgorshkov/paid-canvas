@@ -28,9 +28,11 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
   a small HTTP server. Endpoints: `/`, `/api/board`, `/api/progress`, `/api/health`, and
   `POST /api/issue/<KEY>` which sets a priority or runs a transition, then reads the issue
   back and returns what the board needs to move the card.
-- `index.html` — the whole client, one file. Canvas layout in world coordinates, pan and zoom
-  by CSS transform. Every card draws everything it has at every zoom; `LOD` holds the scale
-  below which it would drop to the title alone, and at `[0]` that never happens.
+- `index.html` — the whole client, one file. The board is one `<canvas>` the size of the
+  window. `relayout()` places cards in world coordinates, `paint()` draws the ones the
+  viewport covers, and `pick()` answers what is under the pointer. Pan and zoom change
+  `view` and ask for a frame. The rails, the quick filters, the detail panel and the minimap
+  stay DOM.
 - `README.md` — what the board shows and every setting.
 
 ## Rules
@@ -42,4 +44,10 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
 - `POST /api/issue/<KEY>` writes to real tickets. Never call it to try something out; a status
   change resets that ticket's days-in-status clock, which the board uses to spot stale work.
 - Card geometry reserves room for everything a card can show, so zoom never re-lays out the
-  board. If you change what is drawn, change the metrics that reserve room for it.
+  board. If you change what is drawn, change the metrics that reserve room for it. Card and
+  chip heights come from `wrap()`, which measures the real text, so a metric and its drawing
+  have to pass `wrap()` the same width and font or the two disagree.
+- Nothing about a card is styled in CSS any more. Its colours are in `C`, its fonts in
+  `fnt()`, and its geometry in the constants at the top. `paint()` runs on every frame of a
+  gesture, so per-frame work belongs in it only if it is cheap: text is measured once and
+  cached, and a run under `TEXT_MIN` on screen is a bar rather than glyphs.

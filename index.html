@@ -87,120 +87,13 @@ button,select,input{font:inherit;color:inherit}
   background-image:radial-gradient(circle at 1px 1px,#1d232d 1px,transparent 0);
   background-size:30px 30px}
 #stage.grab{cursor:grabbing}
-#world{position:absolute;top:0;left:0;transform-origin:0 0}
-#world.moving{will-change:transform}
+#board{position:absolute;top:0;left:0}
 
-/* column bands and swimlanes */
-.colband{position:absolute;top:0;background:#12171e;border:3px solid var(--line2);
-  border-radius:28px}
-.grpline{position:absolute;top:0;width:10px;border-radius:5px;background:var(--line2);
-  opacity:.85;margin-left:-5px}
-.swim{position:absolute;left:0;border-top:5px solid var(--line2);pointer-events:none}
-.swim.alt{background:#ffffff08}
-.swimHd{position:absolute;left:34px;top:0;height:136px;display:flex;align-items:center;gap:22px;
-  line-height:1;white-space:nowrap}
-.swimHd .sd{border-radius:50%;flex:none}
-.swimHd .sl{font-weight:750;letter-spacing:-.02em}
-.swimHd .sc{color:var(--tx3);font-variant-numeric:tabular-nums}
-
-/* ---------- card ---------- */
-.card{position:absolute;background:var(--panel);border:2px solid var(--line);border-radius:18px;
-  overflow:hidden;cursor:pointer;border-color:var(--ac,var(--line))}
-.card:hover{border-color:var(--ah,#4b5a6e)}
-.card.sel{border-color:var(--accent);box-shadow:0 0 0 8px #58a6ff2b}
-.card.dim{opacity:.12}
-.card.hit{border-color:var(--focus);box-shadow:0 0 0 6px #e3a00826}
-.card .body{position:absolute;inset:0;padding:24px;position:absolute}
-/* a card that has sat in one status for months gathers dust, then a web. Both sit behind
-   the text so nothing it says gets harder to read. */
-.card .dust{position:absolute;inset:-25%;pointer-events:none;opacity:0;
-  background-repeat:repeat;background-size:118px 118px;
-  background-image:
-    radial-gradient(1.6px 1.6px at 11% 19%, #d6cbb4aa, transparent 62%),
-    radial-gradient(1.2px 1.2px at 34% 8%,  #d6cbb499, transparent 62%),
-    radial-gradient(2.1px 2.1px at 57% 27%, #d6cbb48c, transparent 62%),
-    radial-gradient(1.1px 1.1px at 79% 13%, #d6cbb4aa, transparent 62%),
-    radial-gradient(1.7px 1.7px at 92% 38%, #d6cbb48c, transparent 62%),
-    radial-gradient(1.3px 1.3px at 18% 46%, #d6cbb4a0, transparent 62%),
-    radial-gradient(2.3px 2.3px at 44% 58%, #d6cbb480, transparent 62%),
-    radial-gradient(1.1px 1.1px at 68% 49%, #d6cbb4aa, transparent 62%),
-    radial-gradient(1.5px 1.5px at 87% 66%, #d6cbb48c, transparent 62%),
-    radial-gradient(1.9px 1.9px at 7% 74%,  #d6cbb480, transparent 62%),
-    radial-gradient(1.2px 1.2px at 29% 88%, #d6cbb4a0, transparent 62%),
-    radial-gradient(1.6px 1.6px at 53% 79%, #d6cbb48c, transparent 62%),
-    radial-gradient(1.1px 1.1px at 74% 94%, #d6cbb4aa, transparent 62%),
-    radial-gradient(2.0px 2.0px at 96% 84%, #d6cbb47a, transparent 62%)}
-.card .web{position:absolute;pointer-events:none;opacity:0;overflow:visible}
-.card .web path,.card .web line{fill:none;stroke:#cfd8e3;vector-effect:non-scaling-stroke}
-/* far zoom: the title, centred in every part of the card that its pills, dates and chips
-   hold at reading size. Its chips become one bar along the bottom edge, a segment each. */
-.card .big{position:absolute;left:24px;right:24px;display:none;align-items:center;
-  overflow:hidden;font-size:48px;font-weight:700;letter-spacing:-.01em;line-height:1.06;
-  color:#cbd7e4;pointer-events:none}
-.card .big span{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;width:100%;
-  overflow-wrap:anywhere}
-.card .bars{position:absolute;left:24px;right:24px;display:none;gap:10px;pointer-events:none}
-.card .bars i{flex:1;min-width:0;border-radius:10px}
-.card .bars i.rel{opacity:.4}
-.card.ghost .big i{display:block;border-radius:8px;background:#222b36}
-.krow{display:flex;align-items:center;gap:12px;height:48px}
+/* The board is drawn on #board; only the pieces the detail panel and the filter bar
+   reuse are styled here. */
 .tico{flex:none;display:block}
 #side .spills{align-items:center}
-.k{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:34px;font-weight:700;
-  letter-spacing:-.02em;line-height:1;white-space:nowrap;flex:none;color:var(--tx2)}
-.krow .sp{flex:1}
-.av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:21px;
-  font-weight:800;color:#0b0f14;flex:none}
-.sum{font-size:40px;line-height:50px;margin-top:16px;font-weight:500;letter-spacing:-.01em}
-.pills{display:flex;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
-.pill{font-size:24px;font-weight:700;padding:7px 14px;border-radius:9px;line-height:1;
-  white-space:nowrap;letter-spacing:.04em}
-.meta{margin-top:14px;display:flex;gap:18px;font-size:26px;color:var(--tx3);align-items:center;
-  flex-wrap:wrap;line-height:1.2}
-.meta .ep{color:#a371f7;max-width:440px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.meta .age{font-weight:700;color:var(--tx2)}
-.mrpips{display:inline-flex;align-items:center;gap:7px;font-size:24px;font-weight:700;
-  color:var(--tx2)}
-.mrpips i{width:15px;height:15px;border-radius:5px;display:inline-block}
-.chd{margin-top:22px;font-size:26px;color:var(--tx3);border-top:2px solid var(--line);
-  padding-top:14px;line-height:1}
-
-/* ---------- linked chip ---------- */
-.kid{position:absolute;border-radius:12px;border:2px solid var(--line2);background:var(--panel2);
-  overflow:hidden;padding:12px 14px}
-.kid.rel{border-style:dashed}
-.kid .kk{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:28px;font-weight:700;
-  line-height:1;display:flex;align-items:center;gap:10px;height:34px;color:var(--tx2)}
-.kid .kk .sp{flex:1}
-.kid .kk .av{width:34px;height:34px;font-size:17px}
-.kid .ks{font-size:28px;line-height:34px;margin-top:10px;color:var(--tx);font-weight:500}
-.kid .kp{margin-top:12px;display:flex;align-items:center;gap:10px}
-.kid .mrs{margin-top:12px;display:flex;flex-direction:column;gap:6px}
-.kid .mr{display:flex;align-items:center;gap:10px;font-size:23px;line-height:28px;
-  color:var(--tx2);white-space:nowrap}
-.kid .mr b{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-weight:700;flex:none}
-.kid .mr .t{overflow:hidden;text-overflow:ellipsis;color:var(--tx3)}
-.kid .mr i{width:13px;height:13px;border-radius:4px;flex:none}
-.kid.dim{opacity:.12}
-.kid.hit{border-color:var(--focus);border-style:solid}
-
-/* ---------- level of detail: 0 the title alone, 1 everything ---------- */
-#world.lod0 .swimHd .sl{font-size:96px}
-#world.lod0 .swimHd .sd{width:40px;height:40px}
-#world.lod0 .swimHd .sc{font-size:72px}
-#world.lod0 .sum,#world.lod0 .pills,#world.lod0 .meta,#world.lod0 .chd{display:none}
-#world.lod0 .krow .k,#world.lod0 .krow .mrpips{display:none}
-#world.lod0 .krow{height:72px}
-#world.lod0 .krow .av{width:72px;height:72px;font-size:34px}
-#world.lod0 .card .big{display:flex}
-#world.lod0 .card.ghost .big{display:flex;flex-direction:column;justify-content:center}
-#world.lod0 .card.ghost .body>.gline{display:none}
-#world.lod0 .card .bars{display:flex}
-#world.lod0 .kid{display:none}
-
-#world.lod1 .swimHd .sl{font-size:54px}
-#world.lod1 .swimHd .sd{width:24px;height:24px}
-#world.lod1 .swimHd .sc{font-size:40px}
+.av{border-radius:50%;display:grid;place-items:center;font-weight:800;color:#0b0f14;flex:none}
 
 /* ---------- sticky rails ---------- */
 #railTop{position:fixed;left:0;right:0;height:36px;z-index:36;pointer-events:none;
@@ -236,7 +129,6 @@ button,select,input{font:inherit;color:inherit}
 #side .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;font-size:11px;color:var(--tx2)}
 #side .row b{color:var(--tx);font-weight:600}
 #side .spills{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
-#side .spills .pill{font-size:10px;padding:3px 8px;border-radius:6px;letter-spacing:.04em}
 #side .spills select{background:var(--panel2);border:1px solid var(--line2);border-radius:6px;
   padding:3px 6px;font-size:11px;font-weight:700;cursor:pointer;outline:none;max-width:150px}
 #side .spills select:hover{border-color:#4b5a6e}
@@ -288,22 +180,6 @@ button,select,input{font:inherit;color:inherit}
   background:linear-gradient(90deg,#58a6ff,#a371f7,#39c5cf)}
 #load.on i{opacity:1}
 
-/* ---------- skeleton ---------- */
-@keyframes shimmer{from{transform:translateX(-130%)}to{transform:translateX(230%)}}
-.card.ghost{border-color:var(--line);background:#12171f}
-.card.ghost .sh{position:absolute;inset:0;pointer-events:none;
-  background:linear-gradient(100deg,transparent 24%,#ffffff10 44%,#ffffff1c 50%,
-    #ffffff10 56%,transparent 76%);
-  animation:shimmer 1.6s linear infinite}
-.ghost .k{color:#2f3947}
-.gline{display:block;height:26px;border-radius:6px;background:#222b36}
-.gline.s{height:20px;background:#1e262f}
-.gpill{display:block;height:38px;width:120px;border-radius:9px;background:#222b36}
-.gav{width:44px;height:44px;border-radius:50%;background:#222b36;flex:none}
-.gico{width:40px;height:40px;border-radius:8px;background:#222b36;flex:none}
-.kid.ghost{border-color:var(--line);background:#161d26}
-.kid.ghost .gline{height:22px}
-.kid.ghost .gpill{height:30px;width:96px}
 #boot code{background:var(--panel2);padding:2px 6px;border-radius:4px;font-size:12px}
 </style>
 </head>
@@ -326,7 +202,7 @@ button,select,input{font:inherit;color:inherit}
   <div class="qrow" id="qfEpics"><span class="qlab">Epics</span></div>
 </div>
 
-<div id="stage"><div id="world"></div></div>
+<div id="stage"><canvas id="board"></canvas></div>
 <div id="railTop"></div>
 <div id="railLeft"></div>
 
@@ -360,29 +236,21 @@ const MAX_SUBCOLS_DONE = 10;                        // Delivered is an archive, 
 const subcolCap = name => name === 'Delivered' ? MAX_SUBCOLS_DONE : MAX_SUBCOLS;
 
 // card interior
-const PAD = 24, KEY_ROW = 48, SUM_LH = 50, SUM_CPL = 32;
+const PAD = 24, KEY_ROW = 48, SUM_LH = 50, SUM_F = 40;
 const PILL_ROW = 44, META_ROW = 32, CHD_ROW = 42;
 
 // linked chip: full card width, stacked, height follows its own title and merge requests
-const CHIP_W = CARD_W - PAD * 2, CHIP_GAP = 16, CHIP_PAD = 12;
-const CHIP_KEY = 34, CHIP_LH = 34, CHIP_CPL = 47, CHIP_PILL = 34, CHIP_MR = 34, MR_MAX = 3;
-const CHIP_MIN = 66;                                // compact chip: one row, key and status
+const CHIP_W = CARD_W - PAD * 2, CHIP_GAP = 16, CHIP_PAD = 12, CHIP_PADX = 14;
+const CHIP_KEY = 34, CHIP_LH = 34, CHIP_F = 28, CHIP_PILL = 34, CHIP_MR = 34, MR_MAX = 3;
 
-// far zoom: the title takes the whole card interior and the chips become one bar
-const BAR_H = 44, BAR_GAP = 16;                     // the bar, and its gap above
-const AV_ROW = 72;                                  // matches the lod0 .krow height in CSS
-const BIG_TOP = PAD + AV_ROW + 14;                  // under the far-zoom avatar row
-const BIG_F = 48, BIG_LH = 1.06;                    // one title size on every card
-
-// Where a card drops to the title alone, as a world scale. At 0 nothing is ever below it, so
-// every card draws everything at every zoom; 0.252, 60% of reading size, is the far-zoom state
-// the CSS and the .big and .bars markup are still there for.
-const LOD = [0];
-// The boundary sits 6% higher going up than it does coming down. A pinch holds its scale to
-// within a few percent, so without the gap a gesture that lands on the boundary crosses it
-// several times a second and every card swaps everything it draws each time.
-const LOD_HYST = 1.06;
 const SREAD = 0.42;                                 // world scale where a card reads naturally
+// A text run smaller than this on screen is drawn as a bar. Under seven pixels a word is
+// texture rather than something you read, and a bar costs a rectangle instead of glyph
+// rasterisation. Zoomed out this leaves the story titles as the only words on the board.
+const TEXT_MIN = 7;
+// Under two pixels a bar is a smear, so nothing is drawn at all, and a card narrower than
+// CARD_MIN has nothing left inside it worth drawing: its box and border are the whole card.
+const TEXT_HIDE = 2, CARD_MIN = 42;
 
 const CATC = {new:'#7d8da3', indeterminate:'#e3a008', done:'#3fb950'};
 const PRIOC = {Highest:'#f85149', High:'#f0883e', Medium:'#58a6ff', Low:'#6b7887',
@@ -422,7 +290,7 @@ let sel = null, hits = null, hitIdx = -1;
 const F = {focus:null, q:''};
 
 const $ = s => document.querySelector(s);
-const world = $('#world'), stage = $('#stage');
+const board = $('#board'), bctx = board.getContext('2d'), stage = $('#stage');
 const railTop = $('#railTop'), railLeft = $('#railLeft');
 const esc = s => String(s==null?'':s).replace(/[&<>"]/g,
   c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -443,22 +311,11 @@ function avColor(id, alpha){
 function personName(id){ return (DATA.people.find(p => p.id === id) || {}).name || id; }
 const lastName = n => (n || '').trim().split(/\s+/).pop() || n;
 function epicName(key){ return DATA.epics[key] ? DATA.epics[key].summary : key; }
-function lines(text, cpl){ return Math.max(1, Math.ceil((text || '').length / cpl)); }
 function typeIcon(name, px){
   const src = DATA.typeIcons && DATA.typeIcons[name];
   if (!src) return '';
   return '<img class="tico" src="'+src+'" alt="" title="'+esc(name)+'" style="width:'
     + px + 'px;height:' + px + 'px">';
-}
-function pill(label, color){
-  return '<span class="pill" style="background:'+color+'26;color:'+color+'">'
-    + esc(label) + '</span>';
-}
-function avatar(p, cls){
-  if (!p) return '<span class="av" style="background:#2b3542;color:#6b7887" title="Unassigned">'
-    + '-</span>';
-  return '<span class="av" style="background:'+avColor(p.id)+'" title="'+esc(p.name)+'">'
-    + esc(p.initials)+'</span>';
 }
 function rollUp(mrs){
   const c = {n:mrs.length, opened:0, draft:0, merged:0, closed:0, other:0};
@@ -467,13 +324,6 @@ function rollUp(mrs){
 }
 function shownKids(i){ return i.children.filter(c => CHIP_PROJECTS.has(c.project)); }
 
-function mrPips(roll){
-  if (!roll || !roll.n) return '';
-  return '<span class="mrpips">'
-    + MR_ORDER.filter(k => roll[k])
-        .map(k => '<i style="background:'+MRC[k]+'" title="'+roll[k]+' '+k+'"></i>').join('')
-    + roll.n + ' MR</span>';
-}
 /** A stable little random per issue, so a card's web is the same every render. */
 function seeded(key){
   let h = 2166136261;
@@ -553,6 +403,7 @@ async function load(force){
     }
     DATA = d;
     AV_INDEX = null;
+    WRAPC = new Map();
     if (d.chipProjects) CHIP_PROJECTS = new Set(d.chipProjects);
     $('#bname').textContent = d.board.name + ' - ' + d.counts.issues + ' items, '
       + d.counts.children + ' links';
@@ -644,7 +495,7 @@ function setFocus(kind, id){
   F.focus = same ? null : {kind, id};
   savePrefs();
   syncQuickFilter();
-  render();              // the role badge on each card depends on who is in focus
+  requestDraw();         // the role badge on each card depends on who is in focus
   applyHighlight();
 }
 
@@ -654,7 +505,7 @@ function setFocus(kind, id){
    the box is what changes: the key alone when far out, then the title, then the pills and
    dates, then every linked merge request. */
 function chipMetrics(k){
-  const ln = lines(k.summary, CHIP_CPL);
+  const ln = wrap(k.summary, CHIP_W - CHIP_PADX*2, fnt(CHIP_F, 500)).length;
   const n = Math.min(k.mrs.length, MR_MAX) + (k.mrs.length > MR_MAX ? 1 : 0);
   return {
     lines: ln,
@@ -663,30 +514,13 @@ function chipMetrics(k){
   };
 }
 function cardMetrics(i, kids){
-  const ln = lines(i.summary, SUM_CPL);
+  const ln = wrap(i.summary, CARD_W - PAD*2, fnt(SUM_F, 500)).length;
   const head = PAD + KEY_ROW + 16 + ln*SUM_LH + 18 + PILL_ROW + 14 + META_ROW;
   const chips = kids.map(chipMetrics);
   const kidsH = chips.length
     ? 22 + CHD_ROW + chips.reduce((a,c) => a + c.h, 0) + (chips.length-1)*CHIP_GAP
     : 0;
   return {h: head + kidsH + PAD, lines: ln, chips};
-}
-
-/* Every card writes its far-zoom title at one size, so the board reads as one page of titles
-   rather than a mix of headlines. A card is tall because its title is long or it carries
-   linked work, so the room grows with what has to go into it, and 48px holds all but a
-   handful of titles whole. Those are clamped with an ellipsis. */
-function bigTitle(c){
-  const h = Math.max(BIG_F*BIG_LH,
-    c.h - BIG_TOP - PAD - (c.kids.length ? BAR_H + BAR_GAP : 0));
-  return {h, n: Math.max(1, Math.floor(h/(BIG_F*BIG_LH)))};
-}
-function chipBars(kids, fill){
-  if (!kids.length) return '';
-  return '<div class="bars" style="bottom:'+PAD+'px;height:'+BAR_H+'px">'
-    + kids.map(k => '<i class="'+(k.impl ? '' : 'rel')+'" style="background:'
-        + fill(k)+'"></i>').join('')
-    + '</div>';
 }
 
 /* ===================== layout ===================== */
@@ -848,7 +682,7 @@ var relayout = function(refit, skipKey){
   });
   WORLD = {w:totalW, h:Math.max(y - SWIM_GAP, 800)};
 
-  render();
+  requestDraw();
   buildRails();
   buildQuickFilter();
   applyHighlight();
@@ -857,135 +691,495 @@ var relayout = function(refit, skipKey){
   drawMini();
 };
 
-/* ===================== render ===================== */
-function render(){
+/* ===================== the board, drawn ===================== */
+/* One canvas the size of the window. A frame draws the cards the viewport covers, at the
+   resolution the screen has, so a zoom costs one frame of drawing rather than a re-raster of
+   the whole board. Text under TEXT_MIN on screen is drawn as a bar: at that size a word and a
+   bar look the same, and the bar costs a rectangle instead of glyph rasterisation. */
+
+const SANS = 'ui-sans-serif,-apple-system,"SF Pro Text","Segoe UI",Roboto,sans-serif';
+const MONO = 'ui-monospace,"SF Mono",Menlo,monospace';
+const fnt = (px, w, mono) => (w || 400) + ' ' + px + 'px ' + (mono ? MONO : SANS);
+const EM = 0.5, EM_MONO = 0.6;      // average glyph width, for sizing bars without measuring
+const C = {
+  panel:'#141920', panel2:'#1b222c', line:'#242c38', line2:'#313c4b',
+  tx:'#e6edf3', tx2:'#9aa7b6', tx3:'#6b7887', accent:'#58a6ff', focus:'#e3a008',
+  band:'#12171e', epic:'#a371f7', ghost:'#12171f', ghost2:'#161d26',
+  bar:'#222b36', bar2:'#1e262f', web:'#cfd8e3', none:'#2b3542', hover:'#4b5a6e',
+};
+const A = {sel:'#58a6ff2b', hit:'#e3a00826'};
+const HEX = a => Math.round(Math.max(0, Math.min(1, a))*255).toString(16).padStart(2,'0');
+const fade = (col, a) => (col[0] === '#' && col.length === 7) ? col + HEX(a) : col;
+
+/* Text is measured once per string, width and font, and the answer kept. Card geometry is
+   measured the same way, so a card reserves exactly the room its own title needs. */
+const mc = document.createElement('canvas').getContext('2d');
+let WRAPC = new Map();
+function wrap(text, maxW, f){
+  const key = f + '|' + Math.round(maxW) + '|' + text;
+  const had = WRAPC.get(key);
+  if (had) return had;
+  mc.font = f;
   const out = [];
-  for (const c of COLS)
-    out.push('<div class="colband" style="left:'+c.x+'px;width:'+c.w+'px;height:'
-      + WORLD.h+'px"></div>');
-  COLS.forEach((c, n) => {
-    const next = COLS[n+1];
-    if (!next || next.group === c.group) return;
-    out.push('<div class="grpline" style="left:'+((c.x + c.w + next.x)/2)+'px;height:'
-      + WORLD.h+'px"></div>');
-  });
-
-  for (const s of SWIMS){
-    out.push('<div class="swim'+(s.alt?' alt':'')+'" style="top:'+s.y+'px;width:'+WORLD.w
-      + 'px;height:'+s.h+'px">'
-      + '<div class="swimHd"><i class="sd" style="background:'+s.dot+'"></i>'
-      + '<span class="sl">'+esc(s.label)+'</span>'
-      + '<span class="sc">'+s.count+'</span></div></div>');
-  }
-
-  for (const c of CARDS){
-    const i = c.i;
-    if (GHOST || i.ghost){ out.push(ghostCard(c)); continue; }
-    const role = roleText(i);
-    const big = bigTitle(c);
-    const ac = i.assignee
-      ? ';--ac:'+avColor(i.assignee.id, '.62')+';--ah:'+avColor(i.assignee.id) : '';
-    out.push('<div class="card" data-k="'+i.key+'" style="left:'+c.x+'px;top:'+c.y+'px;width:'
-      + c.w+'px;height:'+c.h+'px'+ac+'">'
-      + ageLayers(i, c.w, c.h)
-      + '<div class="big" style="top:'+BIG_TOP+'px;height:'+big.h+'px"><span style='
-      + '"-webkit-line-clamp:'+big.n+'">'+esc(i.summary)+'</span></div>'
-      + '<div class="body">'
-      + '<div class="krow">'+typeIcon(i.type, 40)+'<span class="k">'+esc(i.key)+'</span>'
-      + '<span class="sp"></span>' + mrPips(c.mr) + avatar(i.assignee) + '</div>'
-      + '<div class="sum">'+esc(i.summary)+'</div>'
-      + '<div class="pills">'
-      + pill(i.priority, PRIOC[i.priority] || PRIOC.None)
-      + pill(i.status, CATC[i.cat])
-      + (role ? pill(role, '#e3a008') : '')
-      + '</div>'
-      + '<div class="meta">'
-      + '<span class="age">'+i.daysInStatus+'d here</span>'
-      + (i.epic ? '<span class="ep">'+esc(epicName(i.epic))+'</span>' : '')
-      + '<span class="lb">'+i.age+'d old</span>'
-      + (i.due ? '<span class="lb">due '+esc(i.due)+'</span>' : '')
-      + '</div>'
-      + (c.kids.length ? '<div class="chd">'+c.kids.length+' linked</div>' : '')
-      + '</div>'
-      + chipBars(c.kids, k => CATC[k.cat] || CATC.new)
-      + '</div>');
-
-    if (c.kids.length){
-      let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0)
-                            + (c.chips.length-1)*CHIP_GAP);
-      c.kids.forEach((k, idx) => {
-        const m = c.chips[idx];
-        const shown = k.mrs.slice(0, MR_MAX);
-        const more = k.mrs.length - shown.length;
-        out.push('<div class="kid'+(k.impl?'':' rel')+'" data-kk="'+esc(k.key)+'" data-owner="'
-          + esc(i.key)+'" style="left:'+(c.x+PAD)+'px;top:'+(c.y+ky)+'px;width:'+CHIP_W
-          + 'px;height:'+m.h+'px">'
-          + '<div class="kk">'+typeIcon(k.type, 30)+esc(k.key)
-          + (k.mr.n ? '<span class="mrpips"><i style="background:'
-              + MRC[MR_ORDER.find(x => k.mr[x])]+'"></i>'+k.mr.n+'</span>' : '')
-          + '<span class="sp"></span>' + avatar(k.assignee) + '</div>'
-          + '<div class="ks">'+esc(k.summary)+'</div>'
-          + '<div class="kp">'+pill(k.status, CATC[k.cat])+'</div>'
-          + (k.mrs.length
-              ? '<div class="mrs">'
-                + shown.map(mr => '<div class="mr"><i style="background:'
-                    + (MRC[mr.state]||MRC.other)+'"></i><b>'+esc(mr.repo)+' !'+esc(mr.iid)
-                    + '</b><span class="t">'+esc(mr.state)+', '+esc(mr.author||'')
-                    + '</span></div>').join('')
-                + (more ? '<div class="mr"><i style="background:#39414f"></i><b>+'+more
-                    + ' more</b></div>' : '')
-                + '</div>'
-              : '')
-          + '</div>');
-        ky += m.h + CHIP_GAP;
-      });
+  let cur = '';
+  for (const word of String(text == null ? '' : text).split(/\s+/).filter(Boolean)){
+    const join = cur ? cur + ' ' + word : word;
+    if (!cur || mc.measureText(join).width <= maxW) cur = join;
+    else { out.push(cur); cur = word; }
+    while (mc.measureText(cur).width > maxW && cur.length > 1){
+      let n = cur.length;
+      while (n > 1 && mc.measureText(cur.slice(0, n)).width > maxW) n--;
+      out.push(cur.slice(0, n));
+      cur = cur.slice(n);
     }
   }
-  world.innerHTML = out.join('');
-  if (sel){
-    const el = world.querySelector('.card[data-k="'+sel+'"]');
-    if (el) el.classList.add('sel');
+  out.push(cur);
+  WRAPC.set(key, out);
+  return out;
+}
+
+let drawPending = false, hover = null, litKids = null;
+function requestDraw(){
+  if (drawPending) return;
+  drawPending = true;
+  requestAnimationFrame(() => { drawPending = false; paint(); });
+}
+
+/** How wide a run of text will be, without drawing it. */
+function tw(g, str, px, o){
+  const s = String(str == null ? '' : str);
+  if (px*view.s < TEXT_MIN) return s.length * px * ((o && o.mono) ? EM_MONO : EM);
+  g.font = fnt(px, o && o.w, o && o.mono);
+  return g.measureText(s).width;
+}
+/** One run of text, or the bar that stands in for it. Returns the width it took. */
+function run(g, str, x, cy, px, o){
+  o = o || {};
+  const s = String(str == null ? '' : str);
+  if (!s) return 0;
+  if (px*view.s < TEXT_MIN){
+    const w = Math.min(s.length * px * (o.mono ? EM_MONO : EM), o.max || Infinity);
+    if (px*view.s < TEXT_HIDE) return w;
+    g.fillStyle = fade(o.color || C.tx, 0.55);
+    // a bar a few pixels tall has no visible corners, and a rect skips building a path
+    if (px*view.s < 5) g.fillRect(x, cy - px*0.3, w, px*0.6);
+    else {
+      g.beginPath();
+      g.roundRect(x, cy - px*0.3, w, px*0.6, Math.min(px*0.22, 5));
+      g.fill();
+    }
+    return w;
+  }
+  g.font = fnt(px, o.w, o.mono);
+  let t = s, w = g.measureText(t).width;
+  if (o.max && w > o.max){
+    while (t.length > 1 && g.measureText(t + '…').width > o.max) t = t.slice(0, -1);
+    t += '…';
+    w = g.measureText(t).width;
+  }
+  g.fillStyle = o.color || C.tx;
+  g.textBaseline = 'middle';
+  g.fillText(t, x, cy);
+  return w;
+}
+function box(g, x, y, w, h, r, fill){
+  g.fillStyle = fill;
+  g.beginPath(); g.roundRect(x, y, w, h, r); g.fill();
+}
+function pillOn(g, label, col, x, cy, px, padx, h){
+  const w = tw(g, label, px, {w:700}) + padx*2;
+  box(g, x, cy - h/2, w, h, 9, fade(col, 0.15));
+  run(g, label, x + padx, cy, px, {w:700, color:col});
+  return w;
+}
+function dot(g, x, cy, d, col, r){
+  box(g, x, cy - d/2, d, d, r == null ? d/3 : r, col);
+}
+function avatarOn(g, p, x, y, d){
+  g.fillStyle = p ? avColor(p.id) : C.none;
+  g.beginPath(); g.arc(x + d/2, y + d/2, d/2, 0, 6.2832); g.fill();
+  const px = d*0.48;
+  if (px*view.s < TEXT_MIN) return;
+  const t = p ? p.initials : '-';
+  run(g, t, x + d/2 - tw(g, t, px, {w:800})/2, y + d/2, px,
+      {w:800, color:p ? '#0b0f14' : C.tx3});
+}
+/** Type icons arrive as data URIs. Each becomes one Image, and the board redraws when it
+ *  decodes; before that the card simply has no icon. */
+const ICONS = new Map();
+function iconFor(name){
+  const src = DATA.typeIcons && DATA.typeIcons[name];
+  if (!src) return null;
+  let im = ICONS.get(name);
+  if (!im){
+    im = new Image();
+    im.onload = requestDraw;
+    im.src = src;
+    ICONS.set(name, im);
+  }
+  return (im.complete && im.naturalWidth) ? im : null;
+}
+function iconOn(g, name, x, cy, d){
+  if (d*view.s < 3.5) return;
+  const im = iconFor(name);
+  if (im) g.drawImage(im, x, cy - d/2, d, d);
+}
+
+/* ---------- dust and webs: the same two marks, drawn rather than styled ---------- */
+const DUST_DOTS = [[11,19,1.6,.67],[34,8,1.2,.6],[57,27,2.1,.55],[79,13,1.1,.67],
+  [92,38,1.7,.55],[18,46,1.3,.63],[44,58,2.3,.5],[68,49,1.1,.67],[87,66,1.5,.55],
+  [7,74,1.9,.5],[29,88,1.2,.63],[53,79,1.6,.55],[74,94,1.1,.67],[96,84,2.0,.48]];
+let DUSTPAT = null;
+function dustPattern(g){
+  if (DUSTPAT) return DUSTPAT;
+  const t = document.createElement('canvas');
+  t.width = t.height = 118;
+  const q = t.getContext('2d');
+  for (const [dx, dy, rad, a] of DUST_DOTS){
+    const x = dx/100*118, y = dy/100*118, r = rad*1.7;
+    const gr = q.createRadialGradient(x, y, 0, x, y, r);
+    gr.addColorStop(0, 'rgba(214,203,180,' + a + ')');
+    gr.addColorStop(1, 'rgba(214,203,180,0)');
+    q.fillStyle = gr;
+    q.fillRect(x - r, y - r, r*2, r*2);
+  }
+  DUSTPAT = g.createPattern(t, 'repeat');
+  return DUSTPAT;
+}
+/** A corner web: a few radial threads with sagging rings strung between them. Same geometry
+ *  for a given key every time, so a card's web never changes. */
+const WEBS = new Map();
+function webGeom(key){
+  const had = WEBS.get(key);
+  if (had) return had;
+  const r = seeded(key);
+  const corner = Math.floor(r() * 2);   // top corners only; chips cover the bottom ones
+  const threads = 5 + Math.floor(r() * 3);
+  const rings = 3 + Math.floor(r() * 3);
+  const ang = [];
+  for (let i = 0; i < threads; i++)
+    ang.push((i + 0.5) / threads * (Math.PI / 2) + (r() - 0.5) * 0.16);
+  const P = (a, rad) => [Math.cos(a) * rad, Math.sin(a) * rad];
+  const p = new Path2D();
+  for (const a of ang){
+    const [x, y] = P(a, 100 * (0.82 + r() * 0.18));
+    p.moveTo(0, 0); p.lineTo(x, y);
+  }
+  for (let j = 0; j < rings; j++){
+    const rad = 100 * (0.22 + 0.74 * (j + 1) / rings) * (0.9 + r() * 0.16);
+    for (let i = 0; i < threads - 1; i++){
+      const [x1, y1] = P(ang[i], rad), [x2, y2] = P(ang[i + 1], rad);
+      const mid = (ang[i] + ang[i + 1]) / 2;
+      const [cx, cy] = P(mid, rad * (0.74 + r() * 0.1));   // the sag between threads
+      p.moveTo(x1, y1); p.quadraticCurveTo(cx, cy, x2, y2);
+    }
+  }
+  const v = {p, corner};
+  WEBS.set(key, v);
+  return v;
+}
+function paintAge(g, c){
+  const i = c.i;
+  if (i.cat === 'done' || c.w*view.s < 26) return;
+  const d = i.daysInStatus || 0;
+  const dust = ramp(d, DUST_FROM, DUST_FULL), web = ramp(d, WEB_FROM, WEB_FULL);
+  if (!dust && !web) return;
+  const r = seeded(i.key + 'd');
+  const turn = r() * Math.PI * 2;
+  if (dust > 0.01){
+    g.save();
+    g.globalAlpha *= dust * 0.8;
+    g.translate(c.x + c.w/2, c.y + c.h/2);
+    g.rotate(turn);
+    g.fillStyle = dustPattern(g);
+    const side = Math.max(c.w, c.h) * 1.5;
+    g.fillRect(-side/2, -side/2, side, side);
+    g.restore();
+  }
+  if (web > 0.02){
+    const size = Math.min(c.w, c.h) * (0.46 + web * 0.2);
+    const {p, corner} = webGeom(i.key);
+    g.save();
+    g.globalAlpha *= 0.18 + web * 0.34;
+    g.translate(corner ? c.x + c.w : c.x, c.y);
+    g.scale((corner ? -size : size)/100, size/100);
+    g.strokeStyle = C.web;
+    g.lineWidth = 1.3 / (view.s * size/100);   // hairline on screen, at any zoom
+    g.stroke(p);
+    g.restore();
   }
 }
 
-function ghostCard(c){
-  const w = n => 'width:' + n + '%';
-  const big = bigTitle(c);
-  const bar = 'height:' + Math.round(BIG_F*.72) + 'px';
-  let out = '<div class="card ghost" style="left:'+c.x+'px;top:'+c.y+'px;width:'+c.w
-    + 'px;height:'+c.h+'px"><i class="sh" style="animation-delay:'
-    + ((c.i.key.length + Math.round(c.y)) % 900 / 1000).toFixed(2) + 's"></i>'
-    + '<div class="big" style="top:'+BIG_TOP+'px;height:'+big.h+'px"><i style="'+bar
-    + '"></i><i style="'+bar+';margin-top:'+Math.round(BIG_F*.34)+'px;'+w(64)+'"></i></div>'
-    + '<div class="body">'
-    + '<div class="krow"><i class="gico"></i><span class="k">PAID-000</span>'
-    + '<span class="sp"></span><i class="gav"></i></div>';
-  for (let n = 0; n < c.lines; n++)
-    out += '<div class="gline" style="margin-top:'+(n ? 12 : 16)+'px;'
-      + w(n === c.lines-1 ? 58 : 96)+'"></div>';
-  out += '<div class="pills"><i class="gpill"></i><i class="gpill" style="width:150px"></i></div>'
-    + '<div class="meta"><i class="gline s" style="width:38%"></i></div>'
-    + (c.kids.length ? '<div class="chd"><i class="gline s" style="width:22%"></i></div>' : '')
-    + '</div>'
-    + chipBars(c.kids, () => '#222b36')
-    + '</div>';
+/* ---------- a card ---------- */
+/** Where each chip sits. The stack is bottom-aligned inside the card, so a chip keeps its
+ *  place whatever the title above it does. */
+function chipRects(c){
+  const out = [];
+  if (!c.kids.length) return out;
+  let ky = c.h - PAD - (c.chips.reduce((a, m) => a + m.h, 0) + (c.chips.length-1)*CHIP_GAP);
+  c.kids.forEach((k, n) => {
+    out.push({k, m:c.chips[n], x:c.x + PAD, y:c.y + ky, w:CHIP_W, h:c.chips[n].h});
+    ky += c.chips[n].h + CHIP_GAP;
+  });
+  return out;
+}
+function paintCardBody(g, c){
+  const i = c.i, L = c.x + PAD, R = c.x + c.w - PAD, W = c.w - PAD*2;
+  let y = c.y + PAD;
+
+  const kcy = y + KEY_ROW/2;
+  let x = L;
+  if (DATA.typeIcons && DATA.typeIcons[i.type]){ iconOn(g, i.type, x, kcy, 40); x += 52; }
+  run(g, i.key, x, kcy, 34, {w:700, mono:true, color:C.tx2});
+  let rx = R - 44;
+  avatarOn(g, i.assignee, rx, kcy - 22, 44);
+  if (c.mr && c.mr.n){
+    const kinds = MR_ORDER.filter(k => c.mr[k]);
+    const label = c.mr.n + ' MR';
+    let px = rx - 12 - (kinds.length*22 + tw(g, label, 24, {w:700}));
+    for (const k of kinds){ dot(g, px, kcy, 15, MRC[k], 5); px += 22; }
+    run(g, label, px, kcy, 24, {w:700, color:C.tx2});
+  }
+
+  y += KEY_ROW + 16;
+  const sum = wrap(i.summary, W, fnt(SUM_F, 500));
+  for (let n = 0; n < Math.min(sum.length, c.lines); n++)
+    run(g, sum[n], L, y + n*SUM_LH + SUM_LH/2, SUM_F, {w:500, color:C.tx});
+  y += c.lines*SUM_LH + 18;
+
+  const pcy = y + PILL_ROW/2;
+  x = L + pillOn(g, i.priority, PRIOC[i.priority] || PRIOC.None, L, pcy, 24, 14, 38) + 12;
+  x += pillOn(g, i.status, CATC[i.cat], x, pcy, 24, 14, 38) + 12;
+  const role = roleText(i);
+  if (role) pillOn(g, role, C.focus, x, pcy, 24, 14, 38);
+  y += PILL_ROW + 14;
+
+  const mcy = y + META_ROW/2;
+  x = L + run(g, i.daysInStatus + 'd here', L, mcy, 26, {w:700, color:C.tx2}) + 18;
+  if (i.epic) x += run(g, epicName(i.epic), x, mcy, 26, {color:C.epic, max:440}) + 18;
+  x += run(g, i.age + 'd old', x, mcy, 26, {color:C.tx3}) + 18;
+  if (i.due) run(g, 'due ' + i.due, x, mcy, 26, {color:C.tx3});
+  y += META_ROW;
 
   if (c.kids.length){
-    let ky = c.h - PAD - (c.chips.reduce((a,x) => a + x.h, 0) + (c.chips.length-1)*CHIP_GAP);
-    c.chips.forEach((m, idx) => {
-      out += '<div class="kid ghost" style="left:'+(c.x+PAD)+'px;top:'+(c.y+ky)+'px;width:'
-        + CHIP_W+'px;height:'+m.h+'px"><i class="sh" style="animation-delay:'
-        + (((idx + 3) * 130) % 900 / 1000).toFixed(2) + 's"></i>'
-        + '<div class="kk"><i class="gico" style="width:30px;height:30px"></i>'
-        + '<span class="sp"></span><i class="gav" style="width:34px;height:34px"></i></div>';
-      for (let n = 0; n < m.lines; n++)
-        out += '<div class="gline" style="margin-top:10px;width:'
-          + (n === m.lines-1 ? 52 : 92) + '%"></div>';
-      out += '<div class="kp"><i class="gpill"></i></div></div>';
-      ky += m.h + CHIP_GAP;
-    });
+    y += 22;
+    g.fillStyle = C.line;
+    g.fillRect(L, y, W, 2);
+    run(g, c.kids.length + ' linked', L, y + 29, 26, {color:C.tx3});
   }
-  return out;
+}
+function paintChipBody(g, r){
+  const k = r.k, L = r.x + CHIP_PADX, R = r.x + r.w - CHIP_PADX, W = r.w - CHIP_PADX*2;
+  let y = r.y + CHIP_PAD;
+
+  const kcy = y + CHIP_KEY/2;
+  let x = L;
+  if (DATA.typeIcons && DATA.typeIcons[k.type]){ iconOn(g, k.type, x, kcy, 30); x += 40; }
+  run(g, k.key, x, kcy, 28, {w:700, mono:true, color:C.tx2});
+  const rx = R - 34;
+  avatarOn(g, k.assignee, rx, kcy - 17, 34);
+  if (k.mr && k.mr.n){
+    const label = String(k.mr.n);
+    const px = rx - 10 - (tw(g, label, 24, {w:700}) + 20);
+    dot(g, px, kcy, 13, MRC[MR_ORDER.find(s => k.mr[s])] || MRC.other, 4);
+    run(g, label, px + 20, kcy, 24, {w:700, color:C.tx2});
+  }
+
+  y += CHIP_KEY + 10;
+  const ks = wrap(k.summary, W, fnt(CHIP_F, 500));
+  for (let n = 0; n < Math.min(ks.length, r.m.lines); n++)
+    run(g, ks[n], L, y + n*CHIP_LH + CHIP_LH/2, CHIP_F, {w:500, color:C.tx});
+  y += r.m.lines*CHIP_LH + 12;
+
+  pillOn(g, k.status, CATC[k.cat], L, y + CHIP_PILL/2, 22, 12, 34);
+  y += CHIP_PILL;
+
+  if (!r.m.mrRows) return;
+  y += 12;
+  const shown = k.mrs.slice(0, MR_MAX), more = k.mrs.length - shown.length;
+  shown.forEach((m, n) => {
+    const cy = y + n*CHIP_MR + CHIP_MR/2;
+    dot(g, L, cy, 13, MRC[m.state] || MRC.other, 4);
+    let mx = L + 23 + run(g, m.repo + ' !' + m.iid, L + 23, cy, 23,
+                          {w:700, mono:true, color:C.tx2}) + 10;
+    run(g, m.state + ', ' + (m.author || ''), mx, cy, 23, {color:C.tx3, max:Math.max(0, R - mx)});
+  });
+  if (more){
+    const cy = y + shown.length*CHIP_MR + CHIP_MR/2;
+    dot(g, L, cy, 13, '#39414f', 4);
+    run(g, '+' + more + ' more', L + 23, cy, 23, {w:700, mono:true, color:C.tx2});
+  }
+}
+
+/* ---------- the skeleton, while a fetch is in flight ---------- */
+function shimmer(g, x, y, w, h, seed){
+  const t = ((performance.now()/1600) + (seed % 900)/900) % 1;
+  const at = x + (t*3.6 - 1.3)*w;
+  const gr = g.createLinearGradient(at, y, at + w, y + h*0.4);
+  gr.addColorStop(0, 'rgba(255,255,255,0)');
+  gr.addColorStop(0.44, 'rgba(255,255,255,.063)');
+  gr.addColorStop(0.5, 'rgba(255,255,255,.11)');
+  gr.addColorStop(0.56, 'rgba(255,255,255,.063)');
+  gr.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = gr;
+  g.fillRect(x, y, w, h);
+}
+function paintGhostCard(g, c){
+  const L = c.x + PAD, W = c.w - PAD*2;
+  let y = c.y + PAD;
+  const kcy = y + KEY_ROW/2;
+  box(g, L, kcy - 20, 40, 40, 8, C.bar);
+  box(g, L + 52, kcy - 13, 190, 26, 6, C.bar);
+  box(g, c.x + c.w - PAD - 44, kcy - 22, 44, 44, 22, C.bar);
+  y += KEY_ROW + 16;
+  for (let n = 0; n < c.lines; n++)
+    box(g, L, y + n*SUM_LH + 12, W*(n === c.lines-1 ? 0.58 : 0.96), 26, 6, C.bar);
+  y += c.lines*SUM_LH + 18;
+  box(g, L, y + 3, 120, 38, 9, C.bar);
+  box(g, L + 132, y + 3, 150, 38, 9, C.bar);
+  y += PILL_ROW + 14;
+  box(g, L, y + 6, W*0.38, 20, 6, C.bar2);
+  y += META_ROW;
+  if (c.kids.length) box(g, L, y + 36, W*0.22, 20, 6, C.bar2);
+  shimmer(g, c.x, c.y, c.w, c.h, c.i.key.length + Math.round(c.y));
+}
+function paintGhostChip(g, r){
+  const L = r.x + CHIP_PADX, W = r.w - CHIP_PADX*2;
+  let y = r.y + CHIP_PAD;
+  const kcy = y + CHIP_KEY/2;
+  box(g, L, kcy - 15, 30, 30, 6, C.bar);
+  box(g, r.x + r.w - CHIP_PADX - 34, kcy - 17, 34, 34, 17, C.bar);
+  y += CHIP_KEY + 10;
+  for (let n = 0; n < r.m.lines; n++)
+    box(g, L, y + n*CHIP_LH + 6, W*(n === r.m.lines-1 ? 0.52 : 0.92), 22, 6, C.bar);
+  y += r.m.lines*CHIP_LH + 12;
+  box(g, L, y + 2, 96, 30, 8, C.bar);
+  shimmer(g, r.x, r.y, r.w, r.h, r.m.lines*130 + Math.round(r.y));
+}
+
+/* ---------- one frame ---------- */
+function visRect(){
+  const {w, h} = vp();
+  return {x:-view.x/view.s, y:-view.y/view.s, w:w/view.s, h:h/view.s};
+}
+const offscreen = (V, x, y, w, h) =>
+  x > V.x + V.w || x + w < V.x || y > V.y + V.h || y + h < V.y;
+
+function paintCard(g, c, V){
+  const i = c.i, ghost = GHOST || i.ghost;
+  const dim = hits && !hits.has(i.key);
+  const lit = hits && hits.has(i.key);
+  // Below CARD_MIN nothing written on a card would be legible, so it says the one thing it
+  // still can: a wash of its status colour, the reading the minimap gives. The wash fades out
+  // as the card grows, and the words fade in one kind at a time as each passes TEXT_HIDE, so
+  // no zoom level is a step change.
+  const cw = c.w*view.s, tiny = cw < CARD_MIN;
+  const wash = ghost ? 0 : 1 - ramp(cw, CARD_MIN, CARD_MIN*2);
+  g.save();
+  if (dim) g.globalAlpha = 0.12;
+  box(g, c.x, c.y, c.w, c.h, 18, ghost ? C.ghost : C.panel);
+  if (wash > 0.01) box(g, c.x, c.y, c.w, c.h, 18, fade(CATC[i.cat] || CATC.new, wash*0.3));
+  if (!tiny){
+    g.save();
+    g.beginPath(); g.roundRect(c.x, c.y, c.w, c.h, 18); g.clip();
+    if (ghost) paintGhostCard(g, c);
+    else { paintAge(g, c); paintCardBody(g, c); }
+    g.restore();
+  }
+  g.lineWidth = Math.max(2, 1.1/view.s);      // the border holds a hairline at any zoom
+  g.strokeStyle = ghost ? C.line
+    : i.key === sel ? C.accent
+    : lit ? C.focus
+    : (hover && hover.card === c) ? (i.assignee ? avColor(i.assignee.id) : C.hover)
+    : (i.assignee ? avColor(i.assignee.id, '.62') : C.line);
+  g.beginPath(); g.roundRect(c.x + 1, c.y + 1, c.w - 2, c.h - 2, 17); g.stroke();
+  if (i.key === sel){
+    g.lineWidth = 8; g.strokeStyle = A.sel;
+    g.beginPath(); g.roundRect(c.x - 4, c.y - 4, c.w + 8, c.h + 8, 22); g.stroke();
+  } else if (lit){
+    g.lineWidth = 6; g.strokeStyle = A.hit;
+    g.beginPath(); g.roundRect(c.x - 3, c.y - 3, c.w + 6, c.h + 6, 21); g.stroke();
+  }
+  for (const r of chipRects(c)){
+    if (offscreen(V, r.x, r.y, r.w, r.h)) continue;
+    const khit = litKids && litKids.has(r.k.key + '@' + i.key);
+    box(g, r.x, r.y, r.w, r.h, 12, ghost ? C.ghost2 : C.panel2);
+    if (wash > 0.01) box(g, r.x, r.y, r.w, r.h, 12, fade(CATC[r.k.cat] || CATC.new, wash*0.34));
+    if (!tiny && r.h*view.s >= 10){
+      g.save();
+      g.beginPath(); g.roundRect(r.x, r.y, r.w, r.h, 12); g.clip();
+      if (ghost) paintGhostChip(g, r); else paintChipBody(g, r);
+      g.restore();
+    }
+    g.lineWidth = 2;
+    g.strokeStyle = khit ? C.focus : C.line2;
+    if (!r.k.impl && !khit) g.setLineDash([7, 6]);
+    g.beginPath(); g.roundRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2, 11); g.stroke();
+    g.setLineDash([]);
+  }
+  g.restore();
+}
+function paint(){
+  const dpr = Math.min(devicePixelRatio || 1, 2), {w, h} = vp();
+  if (board.width !== Math.round(w*dpr) || board.height !== Math.round(h*dpr)){
+    board.width = Math.round(w*dpr); board.height = Math.round(h*dpr);
+    board.style.width = w + 'px'; board.style.height = h + 'px';
+  }
+  const g = bctx;
+  g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  g.clearRect(0, 0, w, h);
+  if (!DATA) return;
+  g.save();
+  g.translate(view.x, view.y);
+  g.scale(view.s, view.s);
+  const V = visRect();
+
+  for (const c of COLS){
+    if (c.x > V.x + V.w || c.x + c.w < V.x) continue;
+    box(g, c.x, 0, c.w, WORLD.h, 28, C.band);
+    g.lineWidth = 3; g.strokeStyle = C.line2;
+    g.beginPath(); g.roundRect(c.x + 1.5, 1.5, c.w - 3, WORLD.h - 3, 26.5); g.stroke();
+  }
+  COLS.forEach((c, n) => {
+    const next = COLS[n+1];
+    if (!next || next.group === c.group) return;
+    g.globalAlpha = 0.85;
+    box(g, (c.x + c.w + next.x)/2 - 5, 0, 10, WORLD.h, 5, C.line2);
+    g.globalAlpha = 1;
+  });
+  for (const s of SWIMS){
+    if (s.y > V.y + V.h || s.y + s.h < V.y) continue;
+    if (s.alt){ g.fillStyle = 'rgba(255,255,255,.031)'; g.fillRect(0, s.y, WORLD.w, s.h); }
+    g.fillStyle = C.line2;
+    g.fillRect(0, s.y, WORLD.w, 5);
+    const cy = s.y + SWIM_HEAD/2;
+    let x = 34;
+    g.fillStyle = s.dot;
+    g.beginPath(); g.arc(x + 12, cy, 12, 0, 6.2832); g.fill();
+    x += 46;
+    x += run(g, s.label, x, cy, 54, {w:700, color:C.tx}) + 22;
+    run(g, s.count, x, cy, 40, {color:C.tx3});
+  }
+  for (const c of CARDS){
+    if (offscreen(V, c.x, c.y, c.w, c.h)) continue;
+    paintCard(g, c, V);
+  }
+  g.restore();
+  if (GHOST) requestDraw();          // the skeleton keeps shimmering
+}
+
+/** What is under a point on screen: the card, and the chip inside it if there is one. */
+function pick(cx, cy){
+  const wx = (cx - view.x)/view.s, wy = (cy - view.y)/view.s;
+  for (let n = CARDS.length - 1; n >= 0; n--){
+    const c = CARDS[n];
+    if (wx < c.x || wx > c.x + c.w || wy < c.y || wy > c.y + c.h) continue;
+    for (const r of chipRects(c))
+      if (wx >= r.x && wx <= r.x + r.w && wy >= r.y && wy <= r.y + r.h)
+        return {card:c, kid:r.k};
+    return {card:c, kid:null};
+  }
+  return null;
 }
 
 /* ===================== quick filter bar ===================== */
@@ -1117,17 +1311,9 @@ function placeRails(){
 }
 
 /* ===================== view transform ===================== */
-let moving = false, movingT = 0, railPending = false;
-let lod = 0;
-function setLod(){
-  let n = 0;
-  while (n < LOD.length && view.s >= LOD[n]*(lod <= n ? LOD_HYST : 1/LOD_HYST)) n++;
-  const cls = 'lod' + n + (moving ? ' moving' : '');
-  if (cls !== world.className){ lod = n; world.className = cls; }
-}
+let movingT = 0, railPending = false;
 function apply(){
-  world.style.transform = 'translate('+view.x+'px,'+view.y+'px) scale('+view.s+')';
-  setLod();
+  requestDraw();
   if (!railPending){
     railPending = true;
     requestAnimationFrame(() => { railPending = false; placeRails(); });
@@ -1163,12 +1349,11 @@ function centerOn(c, s){
   view.y = h/2 - (c.y + c.h/2)*view.s;
   clampView(); apply(); drawMini();
 }
-function beginMove(){ moving = true; world.classList.add('moving'); clearTimeout(movingT); }
+/* The minimap waits for the gesture to stop rather than redrawing under every event. */
+function beginMove(){ clearTimeout(movingT); }
 function endMove(){
   clearTimeout(movingT);
-  movingT = setTimeout(() => {
-    moving = false; world.classList.remove('moving'); drawMini();
-  }, 130);
+  movingT = setTimeout(drawMini, 130);
 }
 
 stage.addEventListener('wheel', e => {
@@ -1186,12 +1371,21 @@ stage.addEventListener('wheel', e => {
 let drag = null;
 stage.addEventListener('pointerdown', e => {
   if (e.button !== 0) return;
+  const at = DATA ? pick(e.clientX, e.clientY) : null;
   drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y, moved:0,
-          card:e.target.closest('.card'), kid:e.target.closest('.kid')};
+          card:at && at.card, kid:at && at.kid};
   try { stage.setPointerCapture(e.pointerId); } catch(_){}
 });
 stage.addEventListener('pointermove', e => {
-  if (!drag) return;
+  if (!drag){
+    if (!DATA) return;
+    const at = pick(e.clientX, e.clientY);
+    const was = hover;
+    hover = at;
+    stage.style.cursor = at ? 'pointer' : '';
+    if ((was && was.card) !== (at && at.card)) requestDraw();
+    return;
+  }
   const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
   drag.moved = Math.max(drag.moved, Math.abs(dx) + Math.abs(dy));
   if (drag.moved > 4){
@@ -1203,23 +1397,24 @@ stage.addEventListener('pointermove', e => {
 stage.addEventListener('pointerup', () => {
   stage.classList.remove('grab');
   if (drag && drag.moved <= 4){
-    if (drag.kid) window.open(DATA.baseUrl + '/browse/' + drag.kid.dataset.kk, '_blank');
-    else select(drag.card ? drag.card.dataset.k : null);
+    if (drag.kid) window.open(DATA.baseUrl + '/browse/' + drag.kid.key, '_blank');
+    else select(drag.card ? drag.card.i.key : null);
   }
   drag = null; endMove(); drawMini();
 });
+stage.addEventListener('pointerleave', () => {
+  if (hover){ hover = null; requestDraw(); }
+});
 stage.addEventListener('dblclick', e => {
-  const c = e.target.closest('.card');
-  if (c) window.open(DATA.baseUrl + '/browse/' + c.dataset.k, '_blank');
+  const at = DATA && pick(e.clientX, e.clientY);
+  if (at) window.open(DATA.baseUrl + '/browse/' + at.card.i.key, '_blank');
 });
 
 /* ===================== detail panel ===================== */
 function select(key){
   sel = key;
-  for (const el of world.querySelectorAll('.card.sel')) el.classList.remove('sel');
+  requestDraw();
   if (!key){ $('#side').classList.remove('open'); $('#mini').classList.remove('shift'); return; }
-  const el = world.querySelector('.card[data-k="'+key+'"]');
-  if (el) el.classList.add('sel');
   const i = DATA.issues.find(x => x.key === key);
   if (!i) return;
 
@@ -1359,10 +1554,9 @@ function applyHighlight(){
   const q = F.q.trim().toLowerCase();
   hitIdx = -1;
   if (!q && !F.focus){
-    hits = null;
-    for (const el of world.querySelectorAll('.dim,.hit')) el.classList.remove('dim','hit');
+    hits = null; litKids = null;
     $('#qn').textContent = '';
-    drawMini();
+    requestDraw(); drawMini();
     return;
   }
   hits = new Set();
@@ -1384,18 +1578,9 @@ function applyHighlight(){
     }
     if (m) hits.add(i.key);
   }
-  for (const el of world.querySelectorAll('.card')){
-    const on = hits.has(el.dataset.k);
-    el.classList.toggle('dim', !on);
-    el.classList.toggle('hit', on);
-  }
-  for (const el of world.querySelectorAll('.kid')){
-    const own = hits.has(el.dataset.owner);
-    el.classList.toggle('dim', !own);
-    el.classList.toggle('hit', own && kidHits.has(el.dataset.kk + '@' + el.dataset.owner));
-  }
+  litKids = kidHits;
   $('#qn').textContent = hits.size + ' / ' + CARDS.length;
-  drawMini();
+  requestDraw(); drawMini();
 }
 function nextHit(){
   if (!hits || !hits.size) return;
@@ -1422,7 +1607,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape'){
     select(null);
     $('#q').value = ''; F.q = '';
-    if (F.focus){ F.focus = null; savePrefs(); syncQuickFilter(); render(); }
+    if (F.focus){ F.focus = null; savePrefs(); syncQuickFilter(); requestDraw(); }
     applyHighlight();
     return;
   }
@@ -1544,7 +1729,7 @@ function startLoading(){
   loadBar(0.04, true);
   clearInterval(LOAD_POLL);
   LOAD_POLL = setInterval(pollProgress, 260);
-  if (DATA) render();                      // ghost the board that is already on screen
+  if (DATA) requestDraw();                 // ghost the board that is already on screen
   else { DATA = ghostData(); relayout(true); }
 }
 function stopLoading(){

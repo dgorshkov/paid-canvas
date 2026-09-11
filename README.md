@@ -81,8 +81,8 @@ rather than a tower. A column narrower than its name shows a short form in the r
 Delivered reaches back 30 days.
 
 A card carries the story key, title, assignee avatar, type, priority and status, and one chip
-per linked work item. Titles are never clipped: the card is laid out around the full text.
-Assignees are avatars only, with the name on hover.
+per linked work item. Titles are never clipped: every title is measured and the card is laid
+out around the lines it takes. Assignees are avatars only, with the name in the detail panel.
 
 Colour is carried by pills alone — type, priority and status — and by the status pill on each
 chip. Cards and chips have no coloured edges or backgrounds. Every status pill uses the Jira status category: grey for to-do, amber
@@ -175,13 +175,17 @@ dates, epic, and one chip per linked work item with its own title, status and me
 A card's box reserves room for all of it, so zooming never resizes anything or bumps a
 neighbour.
 
+Words smaller than seven pixels on screen are drawn as grey bars. At that size a word is
+texture rather than something you read, so the bars cost nothing and say the same thing. Zoom
+out and each kind of text drops to a bar as it passes the threshold, the story titles last of
+all, which leaves them as the only words on the board from about a swimlane's distance.
+
 Columns are separated by a wide gap, so two columns that both run three cards wide still read
 as two columns. They sit in three bands with a wider gap and a divider between them: everything
 before Implementation, everything in flight, and Delivered.
 
-Reserving that room makes the board around 16,500 world px tall, so **Fit** lands near 4%,
-where only the column names read. Around 25% a story title is legible with about a swimlane on
-screen, and the chips under it are colour rather than text. The chips are what drive that
+Reserving that room makes the board around 15,000 world px tall, so **Fit** lands near 4%,
+where the column names in the rail are the only words left. The chips are what drive that
 height: they carry full titles and up to four merge-request rows each.
 
 ## Controls
