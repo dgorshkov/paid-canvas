@@ -43,7 +43,3 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
   change resets that ticket's days-in-status clock, which the board uses to spot stale work.
 - Card geometry reserves room for everything a card can show, so zoom never re-lays out the
   board. If you change what is drawn, change the metrics that reserve room for it.
-- The world is one composited layer holding 400 Mpx of content, and a zoom changes the scale
-  all of it has to be rasterised at. Cards and chips carry `content-visibility:auto` so the
-  browser skips what is off screen, which works because their box size comes from the inline
-  `width` and `height` rather than from their contents. Keep it that way.
