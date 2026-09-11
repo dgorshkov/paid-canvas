@@ -244,10 +244,10 @@ const CHIP_W = CARD_W - PAD * 2, CHIP_GAP = 16, CHIP_PAD = 12, CHIP_PADX = 14;
 const CHIP_KEY = 34, CHIP_LH = 34, CHIP_F = 28, CHIP_PILL = 34, CHIP_MR = 34, MR_MAX = 3;
 
 const SREAD = 0.42;                                 // world scale where a card reads naturally
-// A text run smaller than this on screen is drawn as a bar. Under seven pixels a word is
+// A text run smaller than this on screen is drawn as a bar. Under five pixels a word is
 // texture rather than something you read, and a bar costs a rectangle instead of glyph
 // rasterisation. Zoomed out this leaves the story titles as the only words on the board.
-const TEXT_MIN = 7;
+const TEXT_MIN = 5;
 // Under two pixels a bar is a smear, so nothing is drawn at all, and a card narrower than
 // CARD_MIN has nothing left inside it worth drawing: its box and border are the whole card.
 const TEXT_HIDE = 2, CARD_MIN = 42;

@@ -175,7 +175,7 @@ dates, epic, and one chip per linked work item with its own title, status and me
 A card's box reserves room for all of it, so zooming never resizes anything or bumps a
 neighbour.
 
-Words smaller than seven pixels on screen are drawn as grey bars. At that size a word is
+Words smaller than five pixels on screen are drawn as grey bars. At that size a word is
 texture rather than something you read, so the bars cost nothing and say the same thing. Zoom
 out and each kind of text drops to a bar as it passes the threshold, the story titles last of
 all, which leaves them as the only words on the board from about a swimlane's distance.
