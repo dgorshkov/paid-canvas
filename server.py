@@ -5,6 +5,7 @@ Serves index.html and a normalized snapshot of Jira board 209 at /api/board.
 The Jira token stays server-side; the browser never sees it.
 """
 import base64
+import calendar
 import json
 import os
 import re
@@ -40,6 +41,14 @@ ROLE_COMMENT, ROLE_LINKED = "c", "k"
 # ticket in any other project — an idea, a support case — is not work on the story, so it
 # does not put you on the card.
 CHIP_PROJECTS = ("ANDR", "IOS", "DEV", "BACK", "LOC")
+
+# A column Jira does not have. Everything that reached the last board column in the past two
+# days stands in its own column ahead of it, so today's deliveries read at a glance instead of
+# sitting among a month of archive. Membership follows the status change rather than the
+# resolution date, which is the board's own reading of when a thing arrived.
+DONE_COLUMN = "Delivered"
+FRESH_COLUMN = "Just delivered"
+FRESH_HOURS = 48
 LINKED_FIELDS = "summary,status,priority,assignee,issuetype,updated,resolutiondate,parent"
 
 # Outward links that mean "this story spawned that work item".
@@ -140,15 +149,50 @@ def now_utc():
     return time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
 
 
-def days_between(a, b):
-    """Whole days between two Jira timestamps, a earlier than b."""
-    fmt = "%Y-%m-%dT%H:%M:%S"
+_TZ = re.compile(r"([+-])(\d{2}):?(\d{2})$")
+
+
+def epoch(ts):
+    """Seconds since the epoch for a Jira timestamp, in the zone the timestamp carries.
+
+    Jira writes 2026-09-11T09:30:00.000+0200. Dropping that offset and reading the rest as
+    local time is right only while this machine sits in the same zone, and two hours out
+    when it does not, which is a quarter of the window FRESH_HOURS names."""
     try:
-        ta = time.mktime(time.strptime(a[:19], fmt))
-        tb = time.mktime(time.strptime(b[:19], fmt))
+        t = time.strptime((ts or "")[:19], "%Y-%m-%dT%H:%M:%S")
     except (ValueError, TypeError):
         return None
+    m = _TZ.search(ts or "")
+    if m:
+        off = int(m.group(2))*3600 + int(m.group(3))*60
+        return calendar.timegm(t) - (off if m.group(1) == "+" else -off)
+    if (ts or "").endswith("Z"):
+        return calendar.timegm(t)
+    return time.mktime(t)                       # no offset written: this machine's clock
+
+
+def column_for(col, since_at, now):
+    """Which column a card sits in: the board's own, or FRESH_COLUMN if it has just landed."""
+    if col != DONE_COLUMN:
+        return col
+    h = hours_between(since_at, now)
+    return FRESH_COLUMN if h is not None and h < FRESH_HOURS else col
+
+
+def days_between(a, b):
+    """Whole days between two Jira timestamps, a earlier than b."""
+    ta, tb = epoch(a), epoch(b)
+    if ta is None or tb is None:
+        return None
     return max(0, int((tb - ta) // 86400))
+
+
+def hours_between(a, b):
+    """Hours between two Jira timestamps, a earlier than b."""
+    ta, tb = epoch(a), epoch(b)
+    if ta is None or tb is None:
+        return None
+    return max(0.0, (tb - ta) / 3600.0)
 
 
 def _file_conf():
@@ -272,14 +316,14 @@ def status_history(issue, now):
         for it in h.get("items") or []:
             if it.get("field") == "status":
                 moves.append({
-                    "at": (h.get("created") or "")[:19],
+                    "at": h.get("created") or "",
                     "by": ((h.get("author") or {}).get("displayName")),
                     "from": it.get("fromString"),
                     "to": it.get("toString"),
                 })
     moves.sort(key=lambda m: m["at"])
 
-    created = (issue["fields"].get("created") or "")[:19]
+    created = issue["fields"].get("created") or ""
     spans, prev_at = [], created
     for m in moves:
         spans.append({"status": m["from"], "days": days_between(prev_at, m["at"]),
@@ -374,13 +418,16 @@ def slim(key, f):
 def build(jira):
     cfg = jira.get(f"/rest/agile/1.0/board/{BOARD_ID}/configuration")
     global _columns_by_status
-    columns, status_to_col, order = [], {}, 0
+    columns, status_to_col = [], {}
     for c in cfg["columnConfig"]["columns"]:
-        ids = [s["id"] for s in c["statuses"]]
-        columns.append({"name": c["name"], "max": c.get("max"), "order": order})
-        for sid in ids:
-            status_to_col[sid] = c["name"]
-        order += 1
+        columns.append({"name": c["name"], "max": c.get("max")})
+        for s in c["statuses"]:
+            status_to_col[s["id"]] = c["name"]
+    names = [c["name"] for c in columns]
+    if DONE_COLUMN in names:
+        columns.insert(names.index(DONE_COLUMN), {"name": FRESH_COLUMN, "max": None})
+    for order, c in enumerate(columns):
+        c["order"] = order
 
     stage("board", 0, 0, "reading board " + str(BOARD_ID))
     _columns_by_status = dict(status_to_col)
@@ -572,7 +619,7 @@ def build(jira):
             "type": (f.get("issuetype") or {}).get("name") or "?",
             "status": sname,
             "cat": scat,
-            "column": status_to_col.get(sid, sname),
+            "column": column_for(status_to_col.get(sid, sname), since_at, now),
             "priority": (f.get("priority") or {}).get("name") or "None",
             "assignee": a,
             "epic": epic_key,
@@ -585,7 +632,7 @@ def build(jira):
             "part": part,
             "statusSince": since_at[:10],
             "daysInStatus": days_between(since_at, now),
-            "age": days_between((f.get("created") or "")[:19], now),
+            "age": days_between(f.get("created") or "", now),
             "movedBy": spans[-1]["by"],
             "spans": [sp for sp in spans if sp["days"]],
             "mrs": own_mrs,
@@ -799,13 +846,14 @@ def apply_change(key, priority=None, transition=None):
         "key": key,
         "status": sname,
         "cat": scat,
-        "column": _columns_by_status.get((f.get("status") or {}).get("id"), sname),
+        "column": column_for(
+            _columns_by_status.get((f.get("status") or {}).get("id"), sname), since_at, now),
         "priority": (f.get("priority") or {}).get("name") or "None",
         "updated": (f.get("updated") or "")[:10],
         "resolved": (f.get("resolutiondate") or "")[:10] or None,
         "statusSince": since_at[:10],
         "daysInStatus": days_between(since_at, now),
-        "age": days_between((f.get("created") or "")[:19], now),
+        "age": days_between(f.get("created") or "", now),
         "movedBy": spans[-1]["by"] if spans else None,
         "spans": [sp for sp in spans if sp["days"]],
         "onBoard": (f.get("status") or {}).get("id") in _columns_by_status,

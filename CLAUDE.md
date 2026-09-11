@@ -25,7 +25,9 @@ If `./run check` fails with 401 or 403, the token is wrong or the account cannot
 ## Layout of the code
 
 - `server.py` — Jira fetch, normalisation, merge requests via Jira's dev-status endpoint, and
-  a small HTTP server. Endpoints: `/`, `/api/board`, `/api/progress`, `/api/health`, and
+  a small HTTP server. It adds one column the board does not have, `FRESH_COLUMN`, holding
+  everything that entered Delivered inside `FRESH_HOURS`; `column_for()` is the only place
+  that decides it, and both the full build and the single-issue re-read go through it. Endpoints: `/`, `/api/board`, `/api/progress`, `/api/health`, and
   `POST /api/issue/<KEY>` which sets a priority or runs a transition, then reads the issue
   back and returns what the board needs to move the card.
 - `index.html` — the whole client, one file. The board is one `<canvas>` the size of the

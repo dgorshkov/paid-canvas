@@ -72,13 +72,20 @@ least three PAID items that is not "assignee of a linked ticket".
 
 ## Layout
 
-The eleven board columns are fixed vertical bands, named in a rail that stays pinned below the
-quick filters. Swimlanes are horizontal rows, one per priority; a swimlane's label pins to the
-left edge once its own header scrolls out of sight. A cell holding many cards wraps into
-sub-columns, up to four wide, and each column takes the fewest it can while keeping the grid
-close to the shape of the screen. Delivered may go ten wide, so the archive reads as a band
-rather than a tower. A column narrower than its name shows a short form in the rail.
-Delivered reaches back 30 days.
+Twelve columns are fixed vertical bands, named in a rail that stays pinned below the quick
+filters. Eleven of them are the board's own; **Just delivered** is added here and holds
+whatever reached Delivered in the past 48 hours, which Jira has no way to show. Swimlanes are
+horizontal rows, one per priority; a swimlane's label pins to the left edge once its own header
+scrolls out of sight. A cell holding many cards wraps into sub-columns, up to four wide, and
+each column takes the fewest it can while keeping the grid close to the shape of the screen.
+Delivered may go ten wide, so the archive reads as a band rather than a tower. A column
+narrower than its name shows a short form in the rail. Delivered reaches back 30 days.
+
+A card is in Just delivered from the moment its status changes rather than from its resolution
+date, so the column says what the board itself did in the last two days. It holds the card for
+48 hours and the card then falls back into Delivered. Moving a ticket to Delivered from the
+detail panel lands it there the same way. The 48 hours are counted in the zone each Jira
+timestamp carries, so a machine in another timezone reads the same boundary.
 
 A card carries the story key, title, assignee avatar, type, priority and status, and one chip
 per linked work item. Titles are never clipped: every title is measured and the card is laid
