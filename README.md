@@ -105,6 +105,17 @@ Chips with a solid border are implementation work — outward `created`, `causes
 `clones` and `split to` links, plus subtasks. Dashed chips are `relates to`, `duplicates` and
 inward links.
 
+## Delivery focus
+
+The **Delivery focus** switch beside the search box, or `d`, narrows the board to the columns
+where a story is built and shipped: Implementation through Just delivered. NEW, UNCLEAR, Ready
+and the Delivered archive come off the board, and the columns that remain fill the screen.
+
+Those cards are off the board rather than dimmed, so the quick filters and the search describe
+what is left: an epic with nothing in delivery loses its chip, and a priority with nothing in
+delivery loses its swimlane. `Esc` leaves the mode alone; the button and `d` turn it off. It
+persists in the browser like the quick filter does.
+
 ## Quick filters
 
 Two rows above the board, one click each. People and craft share the first row, epics have the
@@ -198,8 +209,9 @@ height: they carry full titles and up to four merge-request rows each.
 ## Controls
 
 Drag to pan. `cmd`+scroll or trackpad pinch to zoom; plain scroll pans. `F` fits the board,
-`1` returns to reading size, `/` focuses search, `Enter` jumps to the next match, `Esc` clears
-the filter and the search. The minimap at bottom right jumps the view.
+`1` returns to reading size, `d` toggles delivery focus, `/` focuses search, `Enter` jumps to
+the next match, `Esc` clears the filter and the search. The minimap at bottom right jumps the
+view.
 
 Click a card for the detail panel, which lists every linked item with its relationship
 ("created", "causes", "is caused by"). Click a chip or double-click a card to open Jira.

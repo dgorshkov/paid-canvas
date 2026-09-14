@@ -31,6 +31,19 @@ button,select,input{font:inherit;color:inherit}
   font-size:12px;cursor:pointer;white-space:nowrap;line-height:1}
 .btn:hover{border-color:#3f4c5e;background:#212a36}
 .btn.on{background:#1f6feb33;border-color:#1f6feb;color:#cde3ff}
+/* a switch, for the one control that is a mode rather than an action */
+.tog{display:inline-flex;align-items:center;gap:7px;flex:none;background:var(--panel2);
+  border:1px solid var(--line2);border-radius:6px;padding:4px 9px 4px 5px;font-size:12px;
+  line-height:1;white-space:nowrap;cursor:pointer;color:var(--tx2)}
+.tog:hover{border-color:#3f4c5e;color:var(--tx)}
+.tog i{position:relative;flex:none;width:22px;height:13px;border-radius:7px;background:#2b3542;
+  transition:background .14s ease}
+.tog i::after{content:'';position:absolute;top:2px;left:2px;width:9px;height:9px;
+  border-radius:50%;background:var(--tx3);transition:transform .14s ease,background .14s ease}
+.tog.on{background:#1f6feb26;border-color:#1f6feb;color:#cde3ff}
+.tog.on i{background:#1f6feb}
+.tog.on i::after{transform:translateX(9px);background:#e6edf3}
+
 #clearFocus{background:#e3a00826;border-color:var(--focus);color:#ffd77a;display:none;
   max-width:300px;overflow:hidden;text-overflow:ellipsis}
 #clearFocus.show{display:block}
@@ -192,6 +205,8 @@ button,select,input{font:inherit;color:inherit}
   <div class="ctl">
     <input id="q" placeholder="Search key, summary, person" spellcheck="false">
     <span id="qn"></span>
+    <button class="tog" id="flow" aria-pressed="false"
+      title="Show only the columns where a story is built and shipped (d)"><i></i>Delivery focus</button>
     <button class="btn" id="clearFocus"></button>
   </div>
   <span class="spacer"></span>
@@ -280,6 +295,7 @@ const DELIVERED_DAYS = 30;                  // how far back the Delivered column
 // The last two columns are both done work; server.py names the first of them, which it adds
 // to the board itself.
 const FRESH_COL = 'Just delivered', DONE_COL = 'Delivered';
+const FLOW_FROM = 'Implementation';         // where a story starts being built
 const SHORT = {'NEW':'NEW', 'UNCLEAR':'UNCL', 'Ready':'READY', 'Implementation':'IMPL',
                'Code Review':'CR', 'Testing':'TEST', 'QA Review':'QA', 'Merging':'MERGE',
                'REGRESSION':'REGR', 'Deployment':'DEPL', 'Just delivered':'48H',
@@ -292,8 +308,9 @@ let WORLD = {w:1000, h:1000};
 let view = {x:0, y:0, s:0.2};
 let sel = null, hits = null, hitIdx = -1;
 
-/** One quick filter at a time: {kind:'person'|'epic', id} or null. */
-const F = {focus:null, q:''};
+/** One quick filter at a time: {kind:'person'|'epic', id} or null. `delivery` is a mode
+ *  rather than a filter: it takes columns off the board instead of dimming cards. */
+const F = {focus:null, q:'', delivery:false};
 
 const $ = s => document.querySelector(s);
 const board = $('#board'), bctx = board.getContext('2d'), stage = $('#stage');
@@ -532,10 +549,26 @@ function cardMetrics(i, kids){
 /* ===================== layout ===================== */
 const colWidth = n => LANE_PAD*2 + n*CARD_W + (n-1)*SUB_GAP;
 
+/** Delivery focus narrows the board to the span where a story is built and shipped:
+ *  Implementation through Just delivered. The backlog before it and the archive after it
+ *  come off the board entirely, so the columns that are left fill the screen. */
+function shownCols(names){
+  if (!F.delivery) return names;
+  const a = names.indexOf(FLOW_FROM), b = names.indexOf(FRESH_COL);
+  return (a < 0 || b < a) ? names : names.slice(a, b + 1);
+}
+function setDelivery(on){
+  F.delivery = on;
+  savePrefs();
+  $('#flow').classList.toggle('on', on);
+  $('#flow').setAttribute('aria-pressed', on ? 'true' : 'false');
+  if (DATA) relayout(true);        // the columns that are left should fill the screen
+}
+
 /** Three bands: waiting to start, in flight, and done. */
 function colGroup(name, order){
   if (name === DONE_COL || name === FRESH_COL) return 2;
-  const impl = order.indexOf('Implementation');
+  const impl = order.indexOf(FLOW_FROM);
   return impl > 0 && order.indexOf(name) < impl ? 0 : 1;
 }
 function gapAfter(names, idx){
@@ -631,8 +664,9 @@ function chooseWidths(colNames, keys, cell, vw, vh){
 
 var relayout = function(refit, skipKey){
   const anchor = (refit || skipKey === HOLD_CAMERA) ? null : anchorSnapshot(skipKey);
-  const colNames = DATA.columns.map(c => c.name);
-  const vis = DATA.issues.filter(visible);
+  const colNames = shownCols(DATA.columns.map(c => c.name));
+  const onBoard = new Set(colNames);
+  const vis = DATA.issues.filter(i => onBoard.has(i.column) && visible(i));
 
   const present = new Set(vis.map(i => i.priority));
   let keys = DATA.priorities.filter(p => present.has(p));
@@ -1603,11 +1637,13 @@ $('#q').addEventListener('keydown', e => {
 
 /* ===================== controls ===================== */
 $('#reload').onclick = () => load(true);
+$('#flow').onclick = () => setDelivery(!F.delivery);
 
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT') return;
   if (e.key === '/'){ e.preventDefault(); $('#q').focus(); return; }
   if (e.key === 'f' || e.key === 'F'){ relayout(true); return; }
+  if (e.key === 'd' || e.key === 'D'){ setDelivery(!F.delivery); return; }
   if (e.key === '1'){ zoomAt(innerWidth/2, innerHeight/2, SREAD/view.s); return; }
   if (e.key === 'Enter'){ nextHit(); return; }
   if (e.key === 'Escape'){
@@ -1749,7 +1785,7 @@ function stopLoading(){
 /* ===================== remember choices between sessions ===================== */
 const PREFS = 'paid-canvas.prefs';
 function savePrefs(){
-  try{ localStorage.setItem(PREFS, JSON.stringify({focus:F.focus})); }catch(_){}
+  try{ localStorage.setItem(PREFS, JSON.stringify({focus:F.focus, delivery:F.delivery})); }catch(_){}
 }
 function loadPrefs(){
   try{
@@ -1757,6 +1793,9 @@ function loadPrefs(){
     if (!p) return;
     if (p.focus && ['person','epic','craft'].includes(p.focus.kind) && p.focus.id)
       F.focus = p.focus;
+    F.delivery = !!p.delivery;
+    $('#flow').classList.toggle('on', F.delivery);
+    $('#flow').setAttribute('aria-pressed', F.delivery ? 'true' : 'false');
   }catch(_){}
 }
 
